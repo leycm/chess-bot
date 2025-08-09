@@ -3,14 +3,15 @@ package org.leycm.chessbot.chess.pieces;
 import org.leycm.chessbot.chess.ChessBoard;
 import org.leycm.chessbot.chess.Piece;
 
-public class Pawn extends Piece {
+public class PawnChessPiece extends Piece {
 
-    public Pawn(boolean isWhite) {
-        super(isWhite, 1);
+
+    public PawnChessPiece(boolean isWhite, ChessBoard board) {
+        super(isWhite, board, 1, "pawn_chess_piece", "Pawn", '.');
     }
 
     @Override
-    public boolean isValidMove(int targetX, int targetY, ChessBoard board) {
+    public boolean isValidMove(int targetX, int targetY) {
         int direction = isWhite ? -1 : 1;
 
         if (targetX == x && targetY == y + direction && board.getPiece(targetX, targetY) == null) {
@@ -28,6 +29,11 @@ public class Pawn extends Piece {
         }
 
         return false;
+    }
+
+    @Override
+    public int[][] getValidMove() {
+        return new int[0][];
     }
 }
 

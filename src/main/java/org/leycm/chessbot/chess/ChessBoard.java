@@ -22,7 +22,7 @@ public class ChessBoard {
             return false;
 
         Piece piece = board[fromY][fromX];
-        if (piece == null || !piece.isValidMove(toX, toY, this))
+        if (piece == null || !piece.isValidMove(toX, toY))
             return false;
 
         Piece captured = board[toY][toX];

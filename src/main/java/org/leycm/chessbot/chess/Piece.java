@@ -4,15 +4,28 @@ public abstract class Piece {
 
     protected int x;
     protected int y;
+
     protected final boolean isWhite;
+    protected final ChessBoard board;
+
     protected final int level;
 
-    public Piece(boolean isWhite, int level) {
+    protected final String id;
+    protected final String name;
+    protected final char ico;
+
+    public Piece(boolean isWhite, ChessBoard board, int level, String id, String name, char ico) {
         this.isWhite = isWhite;
+        this.board = board;
         this.level = level;
+        this.id = id;
+        this.name = name;
+        this.ico = ico;
     }
 
-    public abstract boolean isValidMove(int targetX, int targetY, ChessBoard board);
+    public abstract boolean isValidMove(int targetX, int targetY);
+
+    public abstract int[][] getValidMove();
 
     public void setPosition(int x, int y) {
         this.x = x;
@@ -25,6 +38,18 @@ public abstract class Piece {
 
     public int getLevel() {
         return level;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public char getIco() {
+        return ico;
     }
 
     public int getX() {
