@@ -24,8 +24,11 @@ hs_err_pid*
 replay_pid*
 
 # gradle
-.gradle/**
-gradle/**
+/.gradle/**
+/gradle/**
 
 # assets
-assets/**
+/assets/**
+
+# build
+/build/**

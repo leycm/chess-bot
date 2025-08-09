@@ -1,11 +1,13 @@
 package org.leycm.chessbot.model;
 
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.*;
 
 public class ModelLoader {
 
-    public static void save(Model model, File file) throws IOException {
+    public static void save(@NotNull Model model, File file) throws IOException {
         try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(file))) {
             DenseLayer[] layers = model.getLayers();
             dos.writeInt(layers.length);
@@ -30,7 +32,7 @@ public class ModelLoader {
         }
     }
 
-    public static Model load(File file) throws IOException {
+    public static @NotNull Model load(File file) throws IOException {
         try (DataInputStream dis = new DataInputStream(new FileInputStream(file))) {
             int layerCount = dis.readInt();
             DenseLayer[] layers = new DenseLayer[layerCount];

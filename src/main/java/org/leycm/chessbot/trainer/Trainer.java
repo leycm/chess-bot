@@ -6,6 +6,7 @@ import org.leycm.chessbot.model.ModelLoader;
 import org.leycm.chessbot.model.MoveEncoder;
 
 import java.io.*;
+import java.time.LocalDate;
 import java.util.*;
 
 import java.util.zip.GZIPInputStream;
@@ -21,10 +22,15 @@ public class Trainer {
     private static final int MEMORY_CHECK_INTERVAL = 1000;
     private static final int FORCE_GC_INTERVAL = 5000;
 
+    // (-1 = keins)
+    private static final int MAX_GAMES_LIMIT = 2000000;
+
     private static long totalSamplesProcessed = 0;
     private static long fileSize = 0;
     private static long bytesProcessed = 0;
     private static int gamesProcessed = 0;
+
+    private static boolean stopTraining = false;
 
     public static void main(String[] args) throws IOException {
         System.out.println("=== Optimized Chess AI Trainer (Low Resource Usage) ===");
@@ -48,7 +54,7 @@ public class Trainer {
         fileSize = pgnFile.length();
         System.out.printf("Training on file: %s (%.2f GB)%n", pgnFile.getName(), fileSize / 1024.0 / 1024.0 / 1024.0);
 
-        File existingModel = new File("checkpoint.model");
+        File existingModel = new File("models/checkpoint.model");
         if (existingModel.exists()) {
             System.out.println("Loading existing checkpoint...");
             model = ModelLoader.load(existingModel);
@@ -62,7 +68,7 @@ public class Trainer {
 
         int epochs = 1;
 
-        for (int epoch = 0; epoch < epochs; epoch++) {
+        for (int epoch = 0; epoch < epochs && !stopTraining; epoch++) {
             System.out.println("=== Streaming Epoch " + (epoch + 1) + " ===");
             bytesProcessed = 0;
             totalSamplesProcessed = 0;
@@ -70,9 +76,14 @@ public class Trainer {
 
             processFileInChunks(pgnFile, model, epoch);
 
+            if (stopTraining) {
+                System.out.println("\nTraining stopped due to game limit.");
+                break;
+            }
+
             System.out.printf("Epoch %d completed. Total samples: %,d%n", epoch + 1, totalSamplesProcessed);
 
-            File epochModel = new File("epoch_" + (epoch + 1) + "_final.model");
+            File epochModel = new File("model/epoch/" + (epoch + 1) + "_chess_bot-" + totalSamplesProcessed + "~" + LocalDate.now() + ".model");
             ModelLoader.save(model, epochModel);
             System.out.println("Epoch model saved: " + epochModel.getName());
 
@@ -80,12 +91,13 @@ public class Trainer {
             Thread.yield();
         }
 
-        ModelLoader.save(model, new File("trained_optimized.model"));
-        System.out.println("🎉 Training completed!");
+        ModelLoader.save(model, new File("model/trained/chess_bot-latest.model"));
+        ModelLoader.save(model, new File("model/trained/chess_bot-" + totalSamplesProcessed + "~" + LocalDate.now() + ".model"));
+        System.out.println("Training completed!");
         System.out.printf("Total samples processed: %,d%n", totalSamplesProcessed);
     }
 
-    private static void processFileInChunks(File pgnFile, Model model, int epoch) throws IOException {
+    private static void processFileInChunks(@NotNull File pgnFile, Model model, int epoch) throws IOException {
         InputStream inputStream;
 
         if (pgnFile.getName().endsWith(".gz") || pgnFile.getName().endsWith(".bz2")) {
@@ -99,16 +111,14 @@ public class Trainer {
             inputStream = new FileInputStream(pgnFile);
         }
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream), 64 * 1024)) { // Reduced buffer size
-
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream), 64 * 1024)) {
             String line;
-            StringBuilder gameBuffer = new StringBuilder(512); // Reduced buffer size
+            StringBuilder gameBuffer = new StringBuilder(512);
             List<PGNParser.TrainingData> miniBuffer = new ArrayList<>();
             int gamesInCurrentChunk = 0;
-            long lastCheckpoint = System.currentTimeMillis();
             long lastMemoryCheck = System.currentTimeMillis();
 
-            while ((line = reader.readLine()) != null) {
+            while (!stopTraining && (line = reader.readLine()) != null) {
                 bytesProcessed += line.getBytes().length + 1;
 
                 if (line.startsWith("[")) {
@@ -120,15 +130,22 @@ public class Trainer {
                         gamesInCurrentChunk++;
                         gamesProcessed++;
 
-                        if (gamesProcessed % MEMORY_CHECK_INTERVAL == 0) {
-                            if (isMemoryLow()) {
-                                System.out.println("Low memory detected, processing current buffer...");
-                                if (!miniBuffer.isEmpty()) {
-                                    processTrainingBatch(miniBuffer, model);
-                                    miniBuffer.clear();
-                                }
-                                System.gc();
+                        // Check limit
+                        if (MAX_GAMES_LIMIT > 0 && gamesProcessed >= MAX_GAMES_LIMIT) {
+                            processTrainingBatch(miniBuffer, model);
+                            miniBuffer.clear();
+                            saveCheckpoint(model);
+                            stopTraining = true;
+                            break;
+                        }
+
+                        if (gamesProcessed % MEMORY_CHECK_INTERVAL == 0 && isMemoryLow()) {
+                            System.out.println("Low memory detected, processing current buffer...");
+                            if (!miniBuffer.isEmpty()) {
+                                processTrainingBatch(miniBuffer, model);
+                                miniBuffer.clear();
                             }
+                            System.gc();
                         }
 
                         if (gamesProcessed % FORCE_GC_INTERVAL == 0) {
@@ -173,7 +190,7 @@ public class Trainer {
                 }
             }
 
-            if (!miniBuffer.isEmpty()) {
+            if (!stopTraining && !miniBuffer.isEmpty()) {
                 processTrainingBatch(miniBuffer, model);
             }
 
@@ -245,7 +262,7 @@ public class Trainer {
 
     private static void saveCheckpoint(Model model) {
         try {
-            File checkpoint = new File("checkpoint.model");
+            File checkpoint = new File("model/checkpoint.model");
             ModelLoader.save(model, checkpoint);
             System.out.printf(" [CHECKPOINT: %,d samples] ", totalSamplesProcessed);
         } catch (IOException e) {
@@ -306,5 +323,5 @@ public class Trainer {
 
         return largestFile;
     }
-
 }
+
