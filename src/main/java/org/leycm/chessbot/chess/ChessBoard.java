@@ -26,6 +26,7 @@ public class ChessBoard {
             return false;
 
         Piece captured = board[toY][toX];
+
         board[toY][toX] = piece;
         board[fromY][fromX] = null;
         piece.setPosition(toX, toY);
@@ -33,6 +34,8 @@ public class ChessBoard {
         moveHistory.add(new Move(fromX, fromY, toX, toY, piece, captured));
         return true;
     }
+
+
 
     public Piece getPiece(int x, int y) {
         if (!isValidCoord(x, y)) return null;
@@ -47,25 +50,25 @@ public class ChessBoard {
         return moveHistory;
     }
 
-    public static class Move {
-        public final int fromX, fromY, toX, toY;
-        public final Piece movedPiece;
-        public final Piece capturedPiece;
-
-        public Move(int fromX, int fromY, int toX, int toY, Piece movedPiece, Piece capturedPiece) {
-            this.fromX = fromX;
-            this.fromY = fromY;
-            this.toX = toX;
-            this.toY = toY;
-            this.movedPiece = movedPiece;
-            this.capturedPiece = capturedPiece;
-        }
-
-        @Override
-        public String toString() {
-            return movedPiece.getClass().getSimpleName() + " from (" + fromX + "," + fromY + ") to (" + toX + "," + toY + ")" +
-                    (capturedPiece != null ? " capturing " + capturedPiece.getClass().getSimpleName() : "");
-        }
+    public Piece[][] getBoard() {
+        return board;
     }
+
+    public List<Piece> getPieces(boolean white) {
+        List<Piece> pieces = new ArrayList<>();
+        for (int y = 0; y < 8; y++) {
+            for (int x = 0; x < 8; x++) {
+                Piece piece = board[y][x];
+                if (piece != null && piece.isWhite() == white) {
+                    pieces.add(piece);
+                }
+            }
+        }
+        return pieces;
+    }
+
+
+    public record Move(int fromX, int fromY, int toX, int toY, Piece movedPiece, Piece capturedPiece) {}
+
 }
 

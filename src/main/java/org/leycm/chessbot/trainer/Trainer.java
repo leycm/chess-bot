@@ -23,7 +23,7 @@ public class Trainer {
     private static final int FORCE_GC_INTERVAL = 5000;
 
     // (-1 = keins)
-    private static final int MAX_GAMES_LIMIT = 2000000;
+    private static final int MAX_GAMES_LIMIT = 20000;
 
     private static long totalSamplesProcessed = 0;
     private static long fileSize = 0;
