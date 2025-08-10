@@ -12,23 +12,44 @@ public class PGNParser {
 
     public record Move(int from, int to, String notation) { }
 
-    public record Game(List<Move> moves) { }
+    public record Game(List<Move> moves, GameResult result) { }
 
-    public record TrainingData(int[] boardState, int targetMove) { }
+    public enum GameResult {
+        WHITE_WIN,   // 1-0
+        BLACK_WIN,   // 0-1
+        DRAW,        // 1/2-1/2
+        UNKNOWN      // * or no result
+    }
+
+    public enum MoveValue {
+        WIN,
+        LOSE,
+        NEUTRAL
+    }
+
+    public record TrainingData(int[] boardState, int targetMove, MoveValue result) { }
 
     public static void parseFileInBatches(File pgnFile, int batchSize, Consumer<List<TrainingData>> batchProcessor) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(pgnFile), 64 * 1024)) {
             String line;
             StringBuilder gameText = new StringBuilder();
             List<TrainingData> currentBatch = new ArrayList<>();
+            String gameResult = null;
 
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith("[")) {
-                    continue; // headers
+                if (line.startsWith("[Result")) {
+                    int start = line.indexOf('"');
+                    int end = line.lastIndexOf('"');
+                    if (start != -1 && end != -1 && end > start) {
+                        gameResult = line.substring(start + 1, end);
+                    }
+                } else if (line.startsWith("[")) {
+
                 } else if (line.trim().isEmpty()) {
                     if (!gameText.isEmpty()) {
-                        processGame(gameText.toString(), currentBatch);
+                        processGame(gameText.toString(), gameResult, currentBatch);
                         gameText = new StringBuilder();
+                        gameResult = null;
 
                         if (currentBatch.size() >= batchSize) {
                             batchProcessor.accept(new ArrayList<>(currentBatch));
@@ -41,7 +62,7 @@ public class PGNParser {
             }
 
             if (!gameText.isEmpty()) {
-                processGame(gameText.toString(), currentBatch);
+                processGame(gameText.toString(), gameResult, currentBatch);
             }
 
             if (!currentBatch.isEmpty()) {
@@ -50,18 +71,68 @@ public class PGNParser {
         }
     }
 
-    private static void processGame(String gameText, List<TrainingData> trainingData) {
-        Game game = parseGame(gameText);
+    private static void processGame(String gameText, String resultString, List<TrainingData> trainingData) {
+        GameResult result = parseResult(resultString, gameText);
+        Game game = parseGame(gameText, result);
         if (game == null) return;
 
         ChessBoard board = new ChessBoard();
+        boolean whiteToMove = true;
+
         for (Move move : game.moves()) {
-            int[] boardState = board.toArray();
+            int[] boardState = addTurnToBoard(board.toArray(), whiteToMove);
             int moveIndex = MoveEncoder.encodeMove(move.from(), move.to());
 
-            trainingData.add(new TrainingData(boardState, moveIndex));
+            MoveValue value = getMoveValue(game, whiteToMove);
+
+            trainingData.add(new TrainingData(boardState, moveIndex, value));
             board.applyMove(move);
+            whiteToMove = !whiteToMove;
         }
+    }
+
+    public static @NotNull MoveValue getMoveValue(Game game, boolean whiteToMove) {
+        MoveValue value = MoveValue.LOSE;
+        if (game.result() == GameResult.WHITE_WIN && whiteToMove) {
+            value = MoveValue.WIN;
+        } else if (game.result() == GameResult.BLACK_WIN && !whiteToMove) {
+            value = MoveValue.WIN;
+        } else if (game.result() == GameResult.DRAW && !whiteToMove) {
+            value = MoveValue.NEUTRAL;
+        } else if (game.result() == GameResult.UNKNOWN && !whiteToMove) {
+            value = MoveValue.NEUTRAL;
+        }
+        return value;
+    }
+
+    private static int @NotNull [] addTurnToBoard(int[] boardState, boolean whiteToMove) {
+        int[] extendedBoard = new int[65];
+        System.arraycopy(boardState, 0, extendedBoard, 0, 64);
+        extendedBoard[64] = whiteToMove ? 1 : 0;  // 1 for white, 0 for black
+        return extendedBoard;
+    }
+
+    private static GameResult parseResult(String resultString, String gameText) {
+
+        if (resultString != null) {
+            return switch (resultString) {
+                case "1-0" -> GameResult.WHITE_WIN;
+                case "0-1" -> GameResult.BLACK_WIN;
+                case "1/2-1/2" -> GameResult.DRAW;
+                default -> GameResult.UNKNOWN;
+            };
+        }
+
+        // Try to extract from game text
+        if (gameText.contains("1-0")) {
+            return GameResult.WHITE_WIN;
+        } else if (gameText.contains("0-1")) {
+            return GameResult.BLACK_WIN;
+        } else if (gameText.contains("1/2-1/2")) {
+            return GameResult.DRAW;
+        }
+
+        return GameResult.UNKNOWN;
     }
 
     // deprecated - use parseFileInBatches instead
@@ -73,15 +144,24 @@ public class PGNParser {
         try (BufferedReader reader = new BufferedReader(new FileReader(pgnFile))) {
             String line;
             StringBuilder gameText = new StringBuilder();
+            String gameResult = null;
 
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith("[")) {
+                if (line.startsWith("[Result")) {
+                    int start = line.indexOf('"');
+                    int end = line.lastIndexOf('"');
+                    if (start != -1 && end != -1 && end > start) {
+                        gameResult = line.substring(start + 1, end);
+                    }
+                } else if (line.startsWith("[")) {
                     continue;
                 } else if (line.trim().isEmpty()) {
                     if (!gameText.isEmpty()) {
-                        Game game = parseGame(gameText.toString());
+                        GameResult result = parseResult(gameResult, gameText.toString());
+                        Game game = parseGame(gameText.toString(), result);
                         if (game != null) games.add(game);
                         gameText = new StringBuilder();
+                        gameResult = null;
                     }
                 } else {
                     gameText.append(line).append(" ");
@@ -89,7 +169,8 @@ public class PGNParser {
             }
 
             if (!gameText.isEmpty()) {
-                Game game = parseGame(gameText.toString());
+                GameResult result = parseResult(gameResult, gameText.toString());
+                Game game = parseGame(gameText.toString(), result);
                 if (game != null) games.add(game);
             }
         }
@@ -98,6 +179,10 @@ public class PGNParser {
     }
 
     public static @Nullable Game parseGame(@NotNull String gameText) {
+        return parseGame(gameText, GameResult.UNKNOWN);
+    }
+
+    public static @Nullable Game parseGame(@NotNull String gameText, GameResult result) {
         List<Move> moves = new ArrayList<>();
         ChessBoard board = new ChessBoard();
 
@@ -118,7 +203,7 @@ public class PGNParser {
             }
         }
 
-        return moves.isEmpty() ? null : new Game(moves);
+        return moves.isEmpty() ? null : new Game(moves, result);
     }
 
     private static @Nullable Move parseMove(String notation, ChessBoard board) {

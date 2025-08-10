@@ -22,8 +22,13 @@ public class Trainer {
     private static final int MEMORY_CHECK_INTERVAL = 1000;
     private static final int FORCE_GC_INTERVAL = 5000;
 
+    // winner/loser moves
+    private static final float WINNER_LEARNING_MULTIPLIER = 1.5f;
+    private static final float LOSER_LEARNING_MULTIPLIER = -0.8f;
+    private static final float NEUTRAL_LEARNING_MULTIPLIER = 1.0f;
+
     // (-1 = keins)
-    private static final int MAX_GAMES_LIMIT = 20000;
+    private static final int MAX_GAMES_LIMIT = 100;
 
     private static long totalSamplesProcessed = 0;
     private static long fileSize = 0;
@@ -33,14 +38,32 @@ public class Trainer {
     private static boolean stopTraining = false;
 
     public static void main(String[] args) throws IOException {
-        System.out.println("=== Optimized Chess AI Trainer (Low Resource Usage) ===");
+        System.out.println("=== Enhanced Chess AI Trainer (10 Hidden Layers + Winner/Loser Learning) ===");
 
         checkMemorySettings();
 
         boolean useGPU = false;
         System.out.println("GPU Support: Disabled (CPU-only mode for lower resource usage)");
 
-        int[] layerSizes = {64, 128, 64, 2048};
+        int[] layerSizes = {
+                65,
+                512,
+                384,
+                256,
+                192,
+                128,
+                96,
+                64,
+                48,
+                32,
+                24,
+                4096
+        };
+
+        System.out.printf("Network architecture: %s%n", Arrays.toString(layerSizes));
+        System.out.printf("Total layers: %d (Input: %d, Hidden: %d, Output: %d)%n",
+                layerSizes.length, 1, layerSizes.length - 2, 1);
+
         Model model = new Model(layerSizes, 0.001f, useGPU);
 
         File pgnFile = findLargestPGNFile();
@@ -64,7 +87,7 @@ public class Trainer {
     }
 
     private static void trainOnLargeFile(Model model, File pgnFile, boolean useGPU) throws IOException {
-        System.out.println("Starting optimized streaming training...");
+        System.out.println("Starting optimized streaming training with winner/loser learning...");
 
         int epochs = 1;
 
@@ -115,18 +138,26 @@ public class Trainer {
             String line;
             StringBuilder gameBuffer = new StringBuilder(512);
             List<PGNParser.TrainingData> miniBuffer = new ArrayList<>();
+            String gameResult = null;
             int gamesInCurrentChunk = 0;
             long lastMemoryCheck = System.currentTimeMillis();
 
             while (!stopTraining && (line = reader.readLine()) != null) {
                 bytesProcessed += line.getBytes().length + 1;
 
-                if (line.startsWith("[")) {
+                if (line.startsWith("[Result")) {
+                    int start = line.indexOf('"');
+                    int end = line.lastIndexOf('"');
+                    if (start != -1 && end != -1 && end > start) {
+                        gameResult = line.substring(start + 1, end);
+                    }
+                } else if (line.startsWith("[")) {
                     continue;
                 } else if (line.trim().isEmpty()) {
                     if (!gameBuffer.isEmpty()) {
-                        processGameToBuffer(gameBuffer.toString(), miniBuffer);
+                        processGameToBuffer(gameBuffer.toString(), gameResult, miniBuffer);
                         gameBuffer.setLength(0);
+                        gameResult = null; // Reset for next game
                         gamesInCurrentChunk++;
                         gamesProcessed++;
 
@@ -199,25 +230,56 @@ public class Trainer {
         }
     }
 
-    private static void processGameToBuffer(String gameText, List<PGNParser.TrainingData> buffer) {
+    private static void processGameToBuffer(String gameText, String gameResult, List<PGNParser.TrainingData> buffer) {
         try {
-            PGNParser.Game game = PGNParser.parseGame(gameText);
+            PGNParser.GameResult result = parseGameResult(gameResult, gameText);
+            PGNParser.Game game = PGNParser.parseGame(gameText, result);
             if (game == null || game.moves().size() < 5) return;
 
             ChessBoard board = new ChessBoard();
             int moveCount = 0;
+            boolean whiteToMove = true;
 
             for (PGNParser.Move move : game.moves()) {
                 if (moveCount++ > 25) break;
 
-                int[] boardState = board.toArray();
+                int[] boardState = addTurnToBoard(board.toArray(), whiteToMove);
                 int moveIndex = MoveEncoder.encodeMove(move.from(), move.to());
 
-                buffer.add(new PGNParser.TrainingData(boardState, moveIndex));
+                buffer.add(new PGNParser.TrainingData(boardState, moveIndex, PGNParser.getMoveValue(game, whiteToMove)));
                 board.applyMove(move);
+                whiteToMove = !whiteToMove;
             }
         } catch (Exception _) {
         }
+    }
+
+    private static PGNParser.GameResult parseGameResult(String resultString, String gameText) {
+        if (resultString != null) {
+            return switch (resultString) {
+                case "1-0" -> PGNParser.GameResult.WHITE_WIN;
+                case "0-1" -> PGNParser.GameResult.BLACK_WIN;
+                case "1/2-1/2" -> PGNParser.GameResult.DRAW;
+                default -> PGNParser.GameResult.UNKNOWN;
+            };
+        }
+
+        if (gameText.contains("1-0")) {
+            return PGNParser.GameResult.WHITE_WIN;
+        } else if (gameText.contains("0-1")) {
+            return PGNParser.GameResult.BLACK_WIN;
+        } else if (gameText.contains("1/2-1/2")) {
+            return PGNParser.GameResult.DRAW;
+        }
+
+        return PGNParser.GameResult.UNKNOWN;
+    }
+
+    private static int @NotNull [] addTurnToBoard(int[] boardState, boolean whiteToMove) {
+        int[] extendedBoard = new int[65];
+        System.arraycopy(boardState, 0, extendedBoard, 0, 64);
+        extendedBoard[64] = whiteToMove ? 1 : 0;
+        return extendedBoard;
     }
 
     private static void processTrainingBatch(@NotNull List<PGNParser.TrainingData> batch, Model model) {
@@ -226,6 +288,7 @@ public class Trainer {
         Collections.shuffle(batch);
 
         int numBatches = (batch.size() + BATCH_SIZE - 1) / BATCH_SIZE;
+        int winnerMoves = 0, loserMoves = 0, neutralMoves = 0;
 
         for (int b = 0; b < numBatches; b++) {
             int start = b * BATCH_SIZE;
@@ -234,16 +297,31 @@ public class Trainer {
 
             int[][] inputs = new int[actualBatchSize][];
             int[] targets = new int[actualBatchSize];
+            float[] winnerMultipliers = new float[actualBatchSize];
 
             for (int i = 0; i < actualBatchSize; i++) {
                 PGNParser.TrainingData data = batch.get(start + i);
                 inputs[i] = data.boardState();
                 targets[i] = data.targetMove();
+
+                if (data.result() == PGNParser.MoveValue.WIN) {
+                    winnerMultipliers[i] = WINNER_LEARNING_MULTIPLIER;
+                    winnerMoves++;
+                } else if (data.result() == PGNParser.MoveValue.NEUTRAL) {
+                    winnerMultipliers[i] = NEUTRAL_LEARNING_MULTIPLIER;
+                    neutralMoves++;
+                } else {
+                    winnerMultipliers[i] = LOSER_LEARNING_MULTIPLIER;
+                    loserMoves++;
+                }
             }
 
-            model.trainBatch(inputs, targets, actualBatchSize);
+            model.trainBatch(inputs, targets, actualBatchSize, winnerMultipliers);
             totalSamplesProcessed += actualBatchSize;
         }
+
+        System.out.printf(" -> Learning stats: Winner moves: %d, Neutral moves: %d, Loser moves: %d\n",
+                winnerMoves, neutralMoves, loserMoves);
     }
 
     private static void printProgress(int epoch) {
@@ -324,4 +402,3 @@ public class Trainer {
         return largestFile;
     }
 }
-

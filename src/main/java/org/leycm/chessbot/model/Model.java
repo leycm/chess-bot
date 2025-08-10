@@ -46,14 +46,14 @@ public class Model {
             } else {
                 int mid = (start + end) / 2;
                 invokeAll(new LayerInitTask(start, mid),
-                         new LayerInitTask(mid, end));
+                        new LayerInitTask(mid, end));
             }
         }
     }
 
     public float[] predict(int @NotNull [] input) {
         float[] current = new float[input.length];
-        
+
         if (input.length > 256) {
             threadPool.invoke(new NormalizeTask(input, current, 0, input.length));
         } else {
@@ -91,16 +91,17 @@ public class Model {
             } else {
                 int mid = (start + end) / 2;
                 invokeAll(new NormalizeTask(input, output, start, mid),
-                         new NormalizeTask(input, output, mid, end));
+                        new NormalizeTask(input, output, mid, end));
             }
         }
     }
 
-    public void trainBatch(int[][] inputs, int[] targets, int batchSize) {
+    // Updated to support winner/loser learning with different learning rates
+    public void trainBatch(int[][] inputs, int[] targets, int batchSize, float[] winnerMultipliers) {
         float totalLoss = 0f;
 
         if (batchSize > 512) {
-            threadPool.invoke(new BatchTrainingTask(inputs, targets, batchSize, 0, batchSize));
+            threadPool.invoke(new BatchTrainingTask(inputs, targets, batchSize, winnerMultipliers, 0, batchSize));
         } else {
             for (int i = 0; i < batchSize; i++) {
                 float[] expected = new float[4096];
@@ -115,8 +116,10 @@ public class Model {
                 totalLoss -= loss;
 
                 float[] outputGrad = new float[predicted.length];
+                float multiplier = winnerMultipliers != null ? winnerMultipliers[i] : 1.0f;
+
                 for (int j = 0; j < outputGrad.length; j++) {
-                    outputGrad[j] = predicted[j] - expected[j];
+                    outputGrad[j] = (predicted[j] - expected[j]) * multiplier;
                 }
 
                 float[] currentGrad = outputGrad;
@@ -139,17 +142,24 @@ public class Model {
         }
     }
 
+    // Overloaded method for backward compatibility
+    public void trainBatch(int[][] inputs, int[] targets, int batchSize) {
+        trainBatch(inputs, targets, batchSize, null);
+    }
+
     private class BatchTrainingTask extends RecursiveAction {
         private final int[][] inputs;
         private final int[] targets;
         private final int batchSize;
+        private final float[] winnerMultipliers;
         private final int start;
         private final int end;
 
-        BatchTrainingTask(int[][] inputs, int[] targets, int batchSize, int start, int end) {
+        BatchTrainingTask(int[][] inputs, int[] targets, int batchSize, float[] winnerMultipliers, int start, int end) {
             this.inputs = inputs;
             this.targets = targets;
             this.batchSize = batchSize;
+            this.winnerMultipliers = winnerMultipliers;
             this.start = start;
             this.end = end;
         }
@@ -164,8 +174,10 @@ public class Model {
                     float[] predicted = predict(inputs[i]);
 
                     float[] outputGrad = new float[predicted.length];
+                    float multiplier = winnerMultipliers != null ? winnerMultipliers[i] : 1.0f;
+
                     for (int j = 0; j < outputGrad.length; j++) {
-                        outputGrad[j] = predicted[j] - expected[j];
+                        outputGrad[j] = (predicted[j] - expected[j]) * multiplier;
                     }
 
                     float[] currentGrad = outputGrad;
@@ -175,8 +187,8 @@ public class Model {
                 }
             } else {
                 int mid = (start + end) / 2;
-                invokeAll(new BatchTrainingTask(inputs, targets, batchSize, start, mid),
-                         new BatchTrainingTask(inputs, targets, batchSize, mid, end));
+                invokeAll(new BatchTrainingTask(inputs, targets, batchSize, winnerMultipliers, start, mid),
+                        new BatchTrainingTask(inputs, targets, batchSize, winnerMultipliers, mid, end));
             }
         }
     }
@@ -201,7 +213,7 @@ public class Model {
             } else {
                 int mid = (start + end) / 2;
                 invokeAll(new WeightUpdateTask(start, mid, batchSize),
-                         new WeightUpdateTask(mid, end, batchSize));
+                        new WeightUpdateTask(mid, end, batchSize));
             }
         }
     }
@@ -224,4 +236,3 @@ public class Model {
         return layers;
     }
 }
-
