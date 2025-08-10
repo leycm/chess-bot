@@ -32,6 +32,11 @@ public class KingChessPiece extends Piece {
         possibleFields.add(new int[]{x + 0, y + -1});
         possibleFields.add(new int[]{x + -1, y + -1});
         possibleFields.add(new int[]{x + -1, y + 0});
+        possibleFields.forEach(ints -> {
+            if (isFreeSpot(ints[0], ints[1]) || this.isWhite != this.board.getPiece(ints[0], ints[1]).isWhite()) {
+
+            }
+        });
 
         return fields.toArray(new int[][]{});
     }
