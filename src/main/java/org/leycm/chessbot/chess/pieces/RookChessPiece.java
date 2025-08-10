@@ -8,9 +8,9 @@ import org.leycm.chessbot.util.ArrayUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TowerChessPiece extends Piece {
-    public TowerChessPiece(boolean isWhite, ChessBoard board) {
-        super(isWhite, board, 4, "tower_chess_piece", "Tower", '.');
+public class RookChessPiece extends Piece {
+    public RookChessPiece(boolean isWhite, ChessBoard board) {
+        super(isWhite, board, 4, "rook_chess_piece", "Rook", '.');
     }
 
     @Override
@@ -23,18 +23,18 @@ public class TowerChessPiece extends Piece {
 
         List<int[]> fields = new ArrayList<>();
 
-        fields.addAll(checkInDirection(1, 0, x, y));
+        fields.addAll(checkInDirection(1, 0));
 
-        fields.addAll(checkInDirection(0, 1, x, y));
+        fields.addAll(checkInDirection(0, 1));
 
-        fields.addAll(checkInDirection(-1, 0, x, y));
+        fields.addAll(checkInDirection(-1, 0));
 
-        fields.addAll(checkInDirection(0, -1, x, y));
+        fields.addAll(checkInDirection(0, -1));
 
         return fields.toArray(new int[][]{});
     }
 
-    private @NotNull List<int[]> checkInDirection(int offsetX, int offsetY, int currentX, int currentY) {
+    private @NotNull List<int[]> checkInDirection(int offsetX, int offsetY) {
 
         List<int[]> fieldsInDirection = new ArrayList<>();
 
@@ -44,8 +44,8 @@ public class TowerChessPiece extends Piece {
         while ( !isCollided) {
 
             repeated++;
-            int checkingX = currentX + offsetX * repeated;
-            int checkingY = currentY + offsetY * repeated;
+            int checkingX = x + offsetX * repeated;
+            int checkingY = y + offsetY * repeated;
 
             if (checkingX > 8 || checkingX < 0 || checkingY > 8 || checkingY < 0) {
                 isCollided = true;
