@@ -1,12 +1,12 @@
 package org.leycm.chessbot.chess.pieces;
 
+import org.jetbrains.annotations.NotNull;
 import org.leycm.chessbot.chess.ChessBoard;
 import org.leycm.chessbot.chess.Piece;
+import org.leycm.chessbot.util.ArrayUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.leycm.chessbot.utils.IntArray.*;
 
 public class TowerChessPiece extends Piece {
     public TowerChessPiece(boolean isWhite, ChessBoard board) {
@@ -15,51 +15,55 @@ public class TowerChessPiece extends Piece {
 
     @Override
     public boolean isValidMove(int targetX, int targetY) {
-        return containsIntArray(getValidMove(), new int[]{targetX, targetY});
+        return ArrayUtils.containsInArray(new int[]{targetX, targetY}, getValidFields());
     }
 
     @Override
-    public int[][] getValidMove() {
+    public int[][] getValidFields() {
 
-        int[][] returnValue = new int[][]{};
+        List<int[]> fields = new ArrayList<>();
 
-        for (int[] ints : checkInDirection(1, 0, x, y)) {
-            addIntArrayToIntArraysOfArray(returnValue, ints);
-        }
+        fields.addAll(checkInDirection(1, 0, x, y));
 
-        for (int[] ints : checkInDirection(0, 1, x, y)) {
-            addIntArrayToIntArraysOfArray(returnValue, ints);
-        }
+        fields.addAll(checkInDirection(0, 1, x, y));
 
-        for (int[] ints : checkInDirection(-1, 0, x, y)) {
-            addIntArrayToIntArraysOfArray(returnValue, ints);
-        }
+        fields.addAll(checkInDirection(-1, 0, x, y));
 
-        for (int[] ints : checkInDirection(0, -1, x, y)) {
-            addIntArrayToIntArraysOfArray(returnValue, ints);
-        }
+        fields.addAll(checkInDirection(0, -1, x, y));
 
-        return returnValue;
+        return fields.toArray(new int[][]{});
     }
 
-    private int[][] checkInDirection(int offsetX, int offsetY, int currentX, int currentY) {
+    private @NotNull List<int[]> checkInDirection(int offsetX, int offsetY, int currentX, int currentY) {
 
-        int[][] returnValue = new int[][]{};
+        List<int[]> fieldsInDirection = new ArrayList<>();
 
         boolean isCollided = false;
         int repeated = 0;
-        while ( ! (isCollided)) {
+
+        while ( !isCollided) {
+
             repeated++;
-            if ( ! (isFreeSpot(currentX + offsetX * repeated, currentY + offsetY * repeated))) {
+            int checkingX = currentX + offsetX * repeated;
+            int checkingY = currentY + offsetY * repeated;
+
+            if (checkingX > 8 || checkingX < 0 || checkingY > 8 || checkingY < 0) {
                 isCollided = true;
-                if (this.isWhite != this.board.getPiece(currentX + offsetX * repeated, currentY + offsetY * repeated).isWhite()) {
-                    addIntArrayToIntArraysOfArray(returnValue, new int[]{currentX + offsetX * repeated, currentY + offsetY * repeated});
+                break;
+            }
+
+            if (!isFreeSpot(checkingX, checkingY)) {
+                isCollided = true;
+                if (this.isWhite != this.board.getPiece(checkingX, checkingY).isWhite()) {
+                    fieldsInDirection.add(new int[]{checkingX, checkingY});
                 }
             } else {
-                addIntArrayToIntArraysOfArray(returnValue, new int[]{currentX + offsetX * repeated, currentY + offsetY * repeated});
+                fieldsInDirection.add(new int[]{checkingX, checkingY});
             }
+
         }
-        return returnValue;
+
+        return fieldsInDirection;
     }
 
     private boolean isFreeSpot(int targetX, int targetY) {
