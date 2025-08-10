@@ -19,19 +19,19 @@ public class KingChessPiece extends Piece {
     }
 
     @Override
-    public Object[] getValidFields() {
+    public int[][] getValidFields() {
 
         List<int[]> fields = new ArrayList<>();
 
         List<int[]> possibleFields = new ArrayList<>();
-        possibleFields.add(new int[]{x + 1, y + 1});
-        possibleFields.add(new int[]{x + 0, y + 1});
-        possibleFields.add(new int[]{x + -1, y + 1});
-        possibleFields.add(new int[]{x + 1, y + 0});
-        possibleFields.add(new int[]{x + 1, y + -1});
-        possibleFields.add(new int[]{x + 0, y + -1});
-        possibleFields.add(new int[]{x + -1, y + -1});
-        possibleFields.add(new int[]{x + -1, y + 0});
+        possibleFields.add(new int[]{getX() + 1, getY() + 1});
+        possibleFields.add(new int[]{getX() + 0, getY() + 1});
+        possibleFields.add(new int[]{getX() + -1, getY() + 1});
+        possibleFields.add(new int[]{getX() + 1, getY() + 0});
+        possibleFields.add(new int[]{getX() + 1, getY() + -1});
+        possibleFields.add(new int[]{getX() + 0, getY() + -1});
+        possibleFields.add(new int[]{getX() + -1, getY() + -1});
+        possibleFields.add(new int[]{getX() + -1, getY() + 0});
         possibleFields.forEach(ints -> {
             if (isFreeSpot(ints[0], ints[1]) || this.isWhite != this.board.getPiece(ints[0], ints[1]).isWhite()) {
 

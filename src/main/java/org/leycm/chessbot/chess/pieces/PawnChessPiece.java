@@ -27,14 +27,14 @@ public class PawnChessPiece extends Piece {
         List<int[]> fields = new ArrayList<>();
 
         int direction = isWhite ? -1 : 1;
-        int checkingY = y + direction;
+        int checkingY = getY() + direction;
 
         for (int i = -1; i < 2; i++) {
 
-            int checkingX = x + i;
+            int checkingX = getX() + i;
 
             if (!(checkingX > 8 || checkingX < 0 || checkingY > 8 || checkingY < 0)) {
-                fields.add(new int[]{x,y});
+                fields.add(new int[]{getX(), getY()});
             }
 
         }

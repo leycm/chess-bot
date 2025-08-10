@@ -41,11 +41,11 @@ public class RookChessPiece extends Piece {
         boolean isCollided = false;
         int repeated = 0;
 
-        while ( !isCollided) {
+        while (!isCollided) {
 
             repeated++;
-            int checkingX = x + offsetX * repeated;
-            int checkingY = y + offsetY * repeated;
+            int checkingX = getX() + offsetX * repeated;
+            int checkingY = getY() + offsetY * repeated;
 
             if (checkingX > 8 || checkingX < 0 || checkingY > 8 || checkingY < 0) {
                 isCollided = true;

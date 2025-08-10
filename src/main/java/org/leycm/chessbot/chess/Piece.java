@@ -1,12 +1,12 @@
 package org.leycm.chessbot.chess;
 
-public abstract class Piece {
+import java.util.UUID;
 
-    protected int x;
-    protected int y;
+public abstract class Piece {
 
     protected final boolean isWhite;
     protected final ChessBoard board;
+    protected final UUID uuid;
 
     protected final int level;
 
@@ -21,16 +21,12 @@ public abstract class Piece {
         this.id = id;
         this.name = name;
         this.ico = ico;
+        this.uuid = UUID.randomUUID();
     }
 
     public abstract boolean isValidMove(int targetX, int targetY);
 
-    public abstract Object[] getValidFields();
-
-    public void setPosition(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
+    public abstract int[][] getValidFields();
 
     public boolean isWhite() {
         return isWhite;
@@ -53,11 +49,11 @@ public abstract class Piece {
     }
 
     public int getX() {
-        return x;
+        return board.getXForPiece(uuid);
     }
 
     public int getY() {
-        return y;
+        return board.getYForPiece(uuid);
     }
 
 }
