@@ -34,7 +34,15 @@ public class PawnChessPiece extends Piece {
             int checkingX = getX() + i;
 
             if (!(checkingX > 8 || checkingX < 0 || checkingY > 8 || checkingY < 0)) {
-                fields.add(new int[]{getX(), getY()});
+                if (i != 0) {
+                    if (this.board.getPiece(checkingX, checkingY) != null && this.isWhite != this.board.getPiece(checkingX, checkingY).isWhite()) {
+                        fields.add(new int[]{checkingX, checkingY});
+                    }
+                } else {
+                    if (this.board.getPiece(checkingX, checkingY) != null) {
+                        fields.add(new int[]{checkingX, checkingY});
+                    }
+                }
             }
 
         }

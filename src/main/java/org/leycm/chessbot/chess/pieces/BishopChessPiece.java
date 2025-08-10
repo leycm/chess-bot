@@ -23,10 +23,11 @@ public class BishopChessPiece extends Piece {
 
         List<int[]> fields = new ArrayList<>();
 
-        checkInDirection(1, 1);
-        checkInDirection(1, -1);
-        checkInDirection(-1, 1);
-        checkInDirection(-1, -1);
+
+        fields.addAll(checkInDirection(1, 1));
+        fields.addAll(checkInDirection(-1, 1));
+        fields.addAll(checkInDirection(1, -1));
+        fields.addAll(checkInDirection(-1, -1));
 
         return fields.toArray(new int[][]{});
     }
