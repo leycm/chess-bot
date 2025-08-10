@@ -19,14 +19,15 @@ public class BishopChessPiece extends Piece {
     }
 
     @Override
-    public Object[] getValidFields() {
+    public int[][] getValidFields() {
 
         List<int[]> fields = new ArrayList<>();
 
-        checkInDirection(1, 1);
-        checkInDirection(1, -1);
-        checkInDirection(-1, 1);
-        checkInDirection(-1, -1);
+
+        fields.addAll(checkInDirection(1, 1));
+        fields.addAll(checkInDirection(-1, 1));
+        fields.addAll(checkInDirection(1, -1));
+        fields.addAll(checkInDirection(-1, -1));
 
         return fields.toArray(new int[][]{});
     }
@@ -41,8 +42,8 @@ public class BishopChessPiece extends Piece {
         while ( !isCollided) {
 
             repeated++;
-            int checkingX = x + offsetX * repeated;
-            int checkingY = y + offsetY * repeated;
+            int checkingX = getX() + offsetX * repeated;
+            int checkingY = getY() + offsetY * repeated;
 
             if (checkingX > 8 || checkingX < 0 || checkingY > 8 || checkingY < 0) {
                 isCollided = true;

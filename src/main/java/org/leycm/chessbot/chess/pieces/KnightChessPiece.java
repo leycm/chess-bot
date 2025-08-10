@@ -19,7 +19,7 @@ public class KnightChessPiece extends Piece {
     }
 
     @Override
-    public Object[] getValidFields() {
+    public int[][] getValidFields() {
 
         List<int[]> fields = new ArrayList<>();
 
@@ -61,11 +61,11 @@ public class KnightChessPiece extends Piece {
         offsetY = Math.clamp(offsetY, -1, 1);
 
         if (offsetX != 0 && offsetY == 0) {
-            possibleFields.add(new int[]{x + offsetY * 3, y + 1});
-            possibleFields.add(new int[]{x + offsetY * 3, y - 1});
+            possibleFields.add(new int[]{getX() + offsetY * 3, getY() + 1});
+            possibleFields.add(new int[]{getX() + offsetY * 3, getY() - 1});
         } else if (offsetX == 0 && offsetY != 0) {
-            possibleFields.add(new int[]{x + 1, y + offsetX * 3});
-            possibleFields.add(new int[]{x - 1, y + offsetX * 3});
+            possibleFields.add(new int[]{getX() + 1, getY() + offsetX * 3});
+            possibleFields.add(new int[]{getX() - 1, getY() + offsetX * 3});
         }
 
         return possibleFields;

@@ -1,7 +1,9 @@
 package org.leycm.chessbot.chess;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 public class ChessBoard {
 
@@ -13,7 +15,6 @@ public class ChessBoard {
     public void placePiece(Piece piece, int x, int y) {
         if (isValidCoord(x, y)) {
             board[y][x] = piece;
-            piece.setPosition(x, y);
         }
     }
 
@@ -29,9 +30,9 @@ public class ChessBoard {
 
         board[toY][toX] = piece;
         board[fromY][fromX] = null;
-        piece.setPosition(toX, toY);
 
         moveHistory.add(new Move(fromX, fromY, toX, toY, piece, captured));
+        piece.hasMovedJet = true;
         return true;
     }
 
@@ -40,6 +41,30 @@ public class ChessBoard {
     public Piece getPiece(int x, int y) {
         if (!isValidCoord(x, y)) return null;
         return board[y][x];
+    }
+
+    public int getXForPiece(UUID uuid) {
+        for (int pieceX = 0; pieceX < 8; pieceX++) {
+            for (int pieceY = 0; pieceY < 8; pieceY++) {
+                Piece piece = board[pieceX][pieceY];
+                if (piece == null) continue;
+                if (piece.uuid.equals(uuid)) return pieceX;
+            }
+        }
+
+        return 0;
+    }
+
+    public int getYForPiece(UUID uuid) {
+        for (int pieceX = 0; pieceX < 8; pieceX++) {
+            for (int pieceY = 0; pieceY < 8; pieceY++) {
+                Piece piece = board[pieceX][pieceY];
+                if (piece == null) continue;
+                if (piece.uuid.equals(uuid)) return pieceY;
+            }
+        }
+
+        return 0;
     }
 
     public boolean isValidCoord(int x, int y) {
