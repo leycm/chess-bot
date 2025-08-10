@@ -25,7 +25,7 @@ public abstract class Piece {
 
     public abstract boolean isValidMove(int targetX, int targetY);
 
-    public abstract int[][] getValidMove();
+    public abstract Object[] getValidFields();
 
     public void setPosition(int x, int y) {
         this.x = x;
