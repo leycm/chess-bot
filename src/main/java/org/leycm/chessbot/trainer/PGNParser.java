@@ -44,7 +44,7 @@ public class PGNParser {
                         gameResult = line.substring(start + 1, end);
                     }
                 } else if (line.startsWith("[")) {
-
+                    continue;
                 } else if (line.trim().isEmpty()) {
                     if (!gameText.isEmpty()) {
                         processGame(gameText.toString(), gameResult, currentBatch);
@@ -71,7 +71,7 @@ public class PGNParser {
         }
     }
 
-    private static void processGame(String gameText, String resultString, List<TrainingData> trainingData) {
+    private static void processGame(@NotNull String gameText, String resultString, List<TrainingData> trainingData) {
         GameResult result = parseResult(resultString, gameText);
         Game game = parseGame(gameText, result);
         if (game == null) return;
@@ -91,7 +91,7 @@ public class PGNParser {
         }
     }
 
-    public static @NotNull MoveValue getMoveValue(Game game, boolean whiteToMove) {
+    public static @NotNull MoveValue getMoveValue(@NotNull Game game, boolean whiteToMove) {
         MoveValue value = MoveValue.LOSE;
         if (game.result() == GameResult.WHITE_WIN && whiteToMove) {
             value = MoveValue.WIN;
@@ -123,7 +123,6 @@ public class PGNParser {
             };
         }
 
-        // Try to extract from game text
         if (gameText.contains("1-0")) {
             return GameResult.WHITE_WIN;
         } else if (gameText.contains("0-1")) {
@@ -273,7 +272,7 @@ public class PGNParser {
         return -1;
     }
 
-    private static int findPawnCaptureFrom(int to, int fromFile, ChessBoard board) {
+    private static int findPawnCaptureFrom(int to, int fromFile, @NotNull ChessBoard board) {
         boolean isWhite = board.isWhiteToMove();
         int[] boardArray = board.toArray();
         int pawnValue = isWhite ? 1 : 11;
@@ -289,7 +288,7 @@ public class PGNParser {
         return -1;
     }
 
-    private static int findPieceFrom(char piece, int to, String disambig, ChessBoard board) {
+    private static int findPieceFrom(char piece, int to, String disambig, @NotNull ChessBoard board) {
         boolean isWhite = board.isWhiteToMove();
         int pieceValue = getPieceValue(piece, isWhite);
         if (pieceValue == -1) return -1;
@@ -360,7 +359,7 @@ public class PGNParser {
         };
     }
 
-    private static boolean isPathClear(int from, int to, ChessBoard board) {
+    private static boolean isPathClear(int from, int to, @NotNull ChessBoard board) {
         int[] boardArray = board.toArray();
 
         int fromFile = from % 8;

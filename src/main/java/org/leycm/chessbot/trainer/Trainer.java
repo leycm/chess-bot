@@ -23,12 +23,12 @@ public class Trainer {
     private static final int FORCE_GC_INTERVAL = 5000;
 
     // winner/loser moves
-    private static final float WINNER_LEARNING_MULTIPLIER = 1.5f;
+    private static final float WINNER_LEARNING_MULTIPLIER = 1.8f;
     private static final float LOSER_LEARNING_MULTIPLIER = -0.8f;
-    private static final float NEUTRAL_LEARNING_MULTIPLIER = 1.0f;
+    private static final float NEUTRAL_LEARNING_MULTIPLIER = 0.8f;
 
     // (-1 = keins)
-    private static final int MAX_GAMES_LIMIT = 100;
+    private static final int MAX_GAMES_LIMIT = 20000;
 
     private static long totalSamplesProcessed = 0;
     private static long fileSize = 0;
@@ -154,14 +154,13 @@ public class Trainer {
                 } else if (line.startsWith("[")) {
                     continue;
                 } else if (line.trim().isEmpty()) {
-                    if (!gameBuffer.isEmpty()) {
+                    if (!gameBuffer.isEmpty() && !gameBuffer.toString().contains("Bullet game\"]")) {
                         processGameToBuffer(gameBuffer.toString(), gameResult, miniBuffer);
                         gameBuffer.setLength(0);
-                        gameResult = null; // Reset for next game
+                        gameResult = null;
                         gamesInCurrentChunk++;
                         gamesProcessed++;
 
-                        // Check limit
                         if (MAX_GAMES_LIMIT > 0 && gamesProcessed >= MAX_GAMES_LIMIT) {
                             processTrainingBatch(miniBuffer, model);
                             miniBuffer.clear();
@@ -230,7 +229,8 @@ public class Trainer {
         }
     }
 
-    private static void processGameToBuffer(String gameText, String gameResult, List<PGNParser.TrainingData> buffer) {
+    private static void processGameToBuffer(@NotNull String gameText, String gameResult, List<PGNParser.TrainingData> buffer) {
+
         try {
             PGNParser.GameResult result = parseGameResult(gameResult, gameText);
             PGNParser.Game game = PGNParser.parseGame(gameText, result);

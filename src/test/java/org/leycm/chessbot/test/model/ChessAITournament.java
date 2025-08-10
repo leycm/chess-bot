@@ -33,7 +33,7 @@ public class ChessAITournament {
             }
         }
 
-        playTournament(whiteAI, blackAI, 1000);
+        playTournament(whiteAI, blackAI, 100);
     }
 
     private static Model loadModel(String path, String name) {
@@ -152,7 +152,6 @@ public class ChessAITournament {
                 System.out.println(board);
             }
 
-            // Check for checkmate/stalemate
             if (isGameOver(board)) {
                 if (isInCheck(board)) {
                     System.out.println("Checkmate! " + (board.isWhiteToMove() ? "Black" : "White") + " wins!");
