@@ -5,6 +5,7 @@ import java.util.UUID;
 public abstract class Piece {
 
     protected final boolean isWhite;
+    public boolean hasMovedJet = false;
     protected final ChessBoard board;
     protected final UUID uuid;
 

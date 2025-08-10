@@ -32,6 +32,7 @@ public class ChessBoard {
         board[fromY][fromX] = null;
 
         moveHistory.add(new Move(fromX, fromY, toX, toY, piece, captured));
+        piece.hasMovedJet = true;
         return true;
     }
 
@@ -45,7 +46,9 @@ public class ChessBoard {
     public int getXForPiece(UUID uuid) {
         for (int pieceX = 0; pieceX < 8; pieceX++) {
             for (int pieceY = 0; pieceY < 8; pieceY++) {
-                if (board[pieceX][pieceY].uuid.equals(uuid)) return pieceX;
+                Piece piece = board[pieceX][pieceY];
+                if (piece == null) continue;
+                if (piece.uuid.equals(uuid)) return pieceX;
             }
         }
 
@@ -55,7 +58,9 @@ public class ChessBoard {
     public int getYForPiece(UUID uuid) {
         for (int pieceX = 0; pieceX < 8; pieceX++) {
             for (int pieceY = 0; pieceY < 8; pieceY++) {
-                if (board[pieceX][pieceY].uuid.equals(uuid)) return pieceY;
+                Piece piece = board[pieceX][pieceY];
+                if (piece == null) continue;
+                if (piece.uuid.equals(uuid)) return pieceY;
             }
         }
 
