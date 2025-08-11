@@ -1,73 +1,69 @@
 package org.leycm.chessbot.model;
 
-
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class ModelLoader {
 
-    public static void save(@NotNull Model model, File file) throws IOException {
-        try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(file))) {
+    public static void saveModel(@NotNull ChessModel model, String filename) throws IOException {
+        try (DataOutputStream dos = new DataOutputStream(
+                new BufferedOutputStream(new FileOutputStream(filename)))) {
+
             DenseLayer[] layers = model.getLayers();
             dos.writeInt(layers.length);
 
             for (DenseLayer layer : layers) {
-                float[][] weights = layer.getWeights();
-                float[] biases = layer.getBiases();
+                double[][] weights = layer.getWeights();
+                double[] biases = layer.getBiases();
 
-                dos.writeInt(weights[0].length);
                 dos.writeInt(weights.length);
+                dos.writeInt(weights[0].length);
 
-                for (float[] weight : weights) {
-                    for (float v : weight) {
-                        dos.writeFloat(v);
+                for (double[] weightRow : weights) {
+                    for (double weight : weightRow) {
+                        dos.writeDouble(weight);
                     }
                 }
 
-                for (float bias : biases) {
-                    dos.writeFloat(bias);
+                for (double bias : biases) {
+                    dos.writeDouble(bias);
                 }
             }
         }
     }
 
-    public static @NotNull Model load(File file) throws IOException {
-        try (DataInputStream dis = new DataInputStream(new FileInputStream(file))) {
+    public static @NotNull ChessModel loadModel(String filename) throws IOException {
+        if (!Files.exists(Path.of(filename))) {
+            return new ChessModel();
+        }
+
+        try (DataInputStream dis = new DataInputStream(
+                new BufferedInputStream(new FileInputStream(filename)))) {
+
+            ChessModel model = new ChessModel();
+            DenseLayer[] layers = model.getLayers();
+
             int layerCount = dis.readInt();
-            DenseLayer[] layers = new DenseLayer[layerCount];
 
-            int[] layerSizes = new int[layerCount + 1];
-
-            for (int l = 0; l < layerCount; l++) {
-                int inputSize = dis.readInt();
+            for (int i = 0; i < layerCount && i < layers.length; i++) {
                 int outputSize = dis.readInt();
+                int inputSize = dis.readInt();
 
-                if (l == 0) layerSizes[0] = inputSize;
-                layerSizes[l + 1] = outputSize;
+                double[][] weights = layers[i].getWeights();
+                double[] biases = layers[i].getBiases();
 
-                float[][] weights = new float[outputSize][inputSize];
-                float[] biases = new float[outputSize];
-
-                for (int i = 0; i < outputSize; i++) {
-                    for (int j = 0; j < inputSize; j++) {
-                        weights[i][j] = dis.readFloat();
+                for (int j = 0; j < Math.min(outputSize, weights.length); j++) {
+                    for (int k = 0; k < Math.min(inputSize, weights[j].length); k++) {
+                        weights[j][k] = dis.readDouble();
                     }
                 }
 
-                for (int i = 0; i < outputSize; i++) {
-                    biases[i] = dis.readFloat();
+                for (int j = 0; j < Math.min(outputSize, biases.length); j++) {
+                    biases[j] = dis.readDouble();
                 }
-
-                layers[l] = new DenseLayer(inputSize, outputSize);
-                layers[l].setWeights(weights);
-                layers[l].setBiases(biases);
-            }
-
-            Model model = new Model(layerSizes, 0.001f);
-
-            for (int i = 0; i < layers.length; i++) {
-                model.getLayers()[i] = layers[i];
             }
 
             return model;
