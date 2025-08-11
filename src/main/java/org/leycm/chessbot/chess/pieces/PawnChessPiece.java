@@ -1,12 +1,10 @@
 package org.leycm.chessbot.chess.pieces;
 
-import org.jetbrains.annotations.NotNull;
 import org.leycm.chessbot.chess.ChessBoard;
 import org.leycm.chessbot.chess.Piece;
 import org.leycm.chessbot.util.ArrayUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class PawnChessPiece extends Piece {
@@ -26,7 +24,7 @@ public class PawnChessPiece extends Piece {
 
         List<int[]> fields = new ArrayList<>();
 
-        int direction = isWhite ? -1 : 1;
+        int direction = this.isWhite ? -1 : 1;
         int checkingY = getY() + direction;
 
         for (int i = -1; i < 2; i++) {
@@ -39,7 +37,7 @@ public class PawnChessPiece extends Piece {
                         fields.add(new int[]{checkingX, checkingY});
                     }
                 } else {
-                    if (this.board.getPiece(checkingX, checkingY) != null) {
+                    if (this.board.getPiece(checkingX, checkingY) == null) {
                         fields.add(new int[]{checkingX, checkingY});
                     }
                 }
