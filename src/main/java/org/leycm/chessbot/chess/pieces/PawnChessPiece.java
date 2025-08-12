@@ -24,7 +24,7 @@ public class PawnChessPiece extends Piece {
 
         List<int[]> fields = new ArrayList<>();
 
-        int direction = this.isWhite ? -1 : 1;
+        int direction = this.isWhite ? 1 : -1;
         int checkingY = getY() + direction;
 
         for (int i = -1; i < 2; i++) {
