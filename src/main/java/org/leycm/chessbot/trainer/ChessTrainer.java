@@ -1,34 +1,50 @@
 package org.leycm.chessbot.trainer;
 
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.leycm.chessbot.chess.*;
 import org.leycm.chessbot.chess.pieces.*;
 import org.leycm.chessbot.model.ChessModel;
 import org.leycm.chessbot.model.ModelLoader;
 import org.leycm.chessbot.model.MoveConverter;
+import org.leycm.chessbot.trainer.parser.MultiThreadPgnParser;
+import org.leycm.chessbot.trainer.parser.SingleThreadPgnParser;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@Getter
 public class ChessTrainer {
     private ChessModel model;
+
     private final AtomicLong gamesProcessed = new AtomicLong(0);
     private final AtomicLong samplesProcessed = new AtomicLong(0);
     private final AtomicInteger bulletFiltered = new AtomicInteger(0);
     private final AtomicInteger invalidFiltered = new AtomicInteger(0);
+    private String lastGameLink;
+
     private final long startTime;
     private final String version;
 
-    private final int autoSave = 3000;
+    private final int autoSave = 10000;
+    private long lastAutoSave = System.currentTimeMillis();
 
 
-    public ChessTrainer(String version) {
+    public ChessTrainer(String version, String update) {
         this.version = version;
         this.startTime = System.currentTimeMillis();
+
+        writeFirstLine("model/trained/models.info", version + ": " + update);
 
         try {
             this.model = ModelLoader.loadModel("model/trained/chess_model-" + version + ".model");
@@ -38,18 +54,27 @@ public class ChessTrainer {
         startProgressReporting();
     }
 
-    public void trainFromPgn(String pgnFilename) {
+    public void trainFromPgn(String pgnFilename, boolean multithreading) {
+
+        ChessPgnParser parser = switch (String.valueOf(multithreading)) {
+            case "true" -> new MultiThreadPgnParser();
+            case "false" -> new SingleThreadPgnParser();
+            default -> throw new IllegalStateException("Unexpected value: " + multithreading);
+        };
+
         try {
-            PgnParser.processPgnFile(pgnFilename, new PgnParser.GameProcessor() {
+
+            parser.processPgnFile(pgnFilename, new ChessPgnParser.GameProcessor() {
                 @Override
-                public void processGame(PgnParser.GameData gameData) {
+                public void processGame(ChessPgnParser.GameData gameData) {
                     trainOnGame(gameData);
+                    lastGameLink = gameData.link();
                     gamesProcessed.incrementAndGet();
 
                     if (gamesProcessed.get() % autoSave != 0) return;
 
                     try {
-                        System.out.println(" -> Save Model");
+                        lastAutoSave = System.currentTimeMillis();
                         ModelLoader.saveModel(model, "model/trained/chess_model-" + version + ".model");
                     } catch (Exception _) {}
 
@@ -73,13 +98,13 @@ public class ChessTrainer {
         }
     }
 
-    private void trainOnGame(@NotNull PgnParser.GameData gameData) {
+    private void trainOnGame(@NotNull SingleThreadPgnParser.GameData gameData) {
         ChessBoard board = new ChessBoard();
         setupInitialPosition(board);
 
         boolean whiteToMove = true;
 
-        for (String moveStr : gameData.moves) {
+        for (String moveStr : gameData.moves()) {
             int[] boardState = board.getBoardForAi();
             int[] move = MoveConverter.moveStringToArray(moveStr, board);
 
@@ -97,17 +122,17 @@ public class ChessTrainer {
         }
     }
 
-    private double calculateReward(@NotNull PgnParser.GameData gameData, boolean whiteToMove) {
+    private double calculateReward(@NotNull SingleThreadPgnParser.GameData gameData, boolean whiteToMove) {
         double baseReward = 0.5;
 
-        if ("1-0".equals(gameData.result)) {
+        if ("1-0".equals(gameData.result())) {
             baseReward = whiteToMove ? 1.0 : 0.0;
-        } else if ("0-1".equals(gameData.result)) {
+        } else if ("0-1".equals(gameData.result())) {
             baseReward = whiteToMove ? 0.0 : 1.0;
         }
 
-        int playerElo = whiteToMove ? gameData.whiteElo : gameData.blackElo;
-        int playerRatingDiff = whiteToMove ? gameData.whiteRatingDiff : gameData.blackRatingDiff;
+        int playerElo = whiteToMove ? gameData.whiteElo() : gameData.blackElo();
+        int playerRatingDiff = whiteToMove ? gameData.whiteRatingDiff() : gameData.blackRatingDiff();
 
         double eloFactor = Math.max(0.1, Math.min(2.0, playerElo / 1500.0));
         double ratingFactor = 1.0 + (playerRatingDiff / 100.0);
@@ -148,25 +173,43 @@ public class ChessTrainer {
             long minutes = (elapsed % 3600000) / 60000;
             long seconds = (elapsed % 60000) / 1000;
 
+            long saveSince = (System.currentTimeMillis() - lastAutoSave)  / 1000;
+            String lastSaveSince = saveSince > 14 ? "" : "[Auto saved Model " + saveSince + "s]";
+
             long games = gamesProcessed.get();
             long samples = samplesProcessed.get();
             double speed = games > 0 ? (double) samples / (elapsed / 1000.0) : 0;
             long memory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / (1024 * 1024);
 
-            System.out.printf("\r[%02d:%02d:%02d] Games: %d | Samples: %d | Speed: %.1f s/s | Memory: %dMB | Filtered: %d bullet, %d invalid",
-                    hours, minutes, seconds, games, samples, speed, memory, bulletFiltered.get(), invalidFiltered.get());
+            System.out.printf("\r[%02d:%02d:%02d][%dMB]%s Trained %d Samples in %d Games | Latest: %s | Speed: %.1f s/s | Filtered: %d bullet, %d invalid",
+                    hours, minutes, seconds, memory, lastSaveSince, samples, games, lastGameLink, speed, bulletFiltered.get(), invalidFiltered.get());
 
         }, 1, 1, TimeUnit.SECONDS);
     }
 
+
+    public static void writeFirstLine(String pathStr, String line) {
+        try {
+            Path path = Paths.get(pathStr);
+            List<String> lines = null;
+            lines = Files.exists(path) ? Files.readAllLines(path) : new ArrayList<>();
+            lines.addFirst(line);
+            Files.write(path, lines);
+        } catch (Exception _) {}
+    }
+
     public static void main(String @NotNull [] args) {
 
-
-        if (args.length != 1) {
-            System.out.println("Usage: java ChessTrainer <pgn_file>");
+        if (args.length < 1) {
+            System.out.println("Usage: java ChessTrainer <pgn_file> (--multithreading)");
         }
 
-        ChessTrainer trainer = new ChessTrainer("TEST.0.0.1");
-        trainer.trainFromPgn(args[0]);
+        String filename = args.length < 1 ? "assets/train_games.pgn" : args[0];
+        boolean multithreading = Arrays.stream(args).anyMatch(arg -> arg.equalsIgnoreCase("--multithreading"));
+
+        ChessTrainer trainer = new ChessTrainer("1.1.2-R0-SNAPSHOT", "Add link to Site in the stats");
+        // versions in models.info
+
+        trainer.trainFromPgn(filename, multithreading);
     }
 }

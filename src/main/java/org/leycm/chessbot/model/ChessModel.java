@@ -1,7 +1,7 @@
 package org.leycm.chessbot.model;
 
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 public class ChessModel {
     private final DenseLayer[] layers;
@@ -17,10 +17,11 @@ public class ChessModel {
             layers[i] = new DenseLayer(prevSize, hiddenSizes[i]);
             prevSize = hiddenSizes[i];
         }
+
         layers[hiddenSizes.length] = new DenseLayer(prevSize, outputSize);
     }
 
-    public double[] predict(int[] boardState) {
+    public double[] predict(int @NotNull [] boardState) {
         double[] input = new double[inputSize];
         for (int i = 0; i < boardState.length; i++) {
             input[i] = boardState[i] / 10.0;
@@ -34,7 +35,7 @@ public class ChessModel {
         return current;
     }
 
-    public void train(int[] boardState, int[] move, double reward) {
+    public void train(int @NotNull [] boardState, int[] move, double reward) {
         double[] input = new double[inputSize];
         for (int i = 0; i < boardState.length; i++) {
             input[i] = boardState[i] / 10.0;
@@ -63,7 +64,8 @@ public class ChessModel {
         }
     }
 
-    private int moveToIndex(int[] move) {
+    @Contract(pure = true)
+    private int moveToIndex(int @NotNull [] move) {
         if (move.length < 4) return -1;
         return move[0] * 512 + move[1] * 64 + move[2] * 8 + move[3];
     }

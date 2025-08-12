@@ -1,0 +1,5 @@
+1.1.2-R0-SNAPSHOT: Add link to Site in the stats
+1.1.1-R0-SNAPSHOT: Update Multithreading and using QUEUE_SIZE = 5000
+1.1.0-R0-SNAPSHOT: Add Multithreading support (--multithreading) as arg
+1.0.5-R0-SNAPSHOT: Better Parsing for headers
+1.0.4-R0-SNAPSHOT: Fix movement signature and converting
