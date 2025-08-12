@@ -10,7 +10,7 @@ import java.util.List;
 
 public class BishopChessPiece extends Piece {
     public BishopChessPiece(boolean isWhite, ChessBoard board) {
-        super(isWhite, board, 3, "bishop_chess_piece", "Bishop", '.');
+        super(isWhite, board, 3, "bishop_chess_piece", "Bishop", '♝');
     }
 
     @Override

@@ -1,60 +1,158 @@
 package org.leycm.chessbot.gui;
 
-import org.leycm.chessbot.ChessBotApplication;
+import org.leycm.chessbot.chess.ChessBoard;
+import org.leycm.chessbot.chess.Piece;
+import org.leycm.chessbot.chess.pieces.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class ChessJFrameGame {
 
     private static DefaultListModel<String> listModel = new DefaultListModel<>();
-    private static JFrame jFrame = new JFrame();
+    private static JFrame jFrame = new JFrame("Chess Board [UI]");
     private static JPanel jSidePanel = new JPanel(new BorderLayout());
-    private static int oldWodth = 0;
-    private static int oldHeight = 0;
+    private static ChessBoard currentBoard = new ChessBoard();
+    private static HashMap<String, Color> theme = new HashMap<>();
+    private static int reapted = 0;
 
-    private static JPanel boardPanel = new JPanel(new GridLayout(8, 8)) {
-        @Override
-        public Dimension getPreferredSize() {
-            int size = computeSquareSize(this);
-            return new Dimension(size, size);
-        }
+    private static JPanel boardPanel;
 
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            revalidate();
-        }
-    };
+    private static List<JLabel> pieceJLabels = new ArrayList<>();
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(ChessJFrameGame::createAndShowGUI);
-        new Timer(50, e -> {
+
+        currentBoard = new ChessBoard();
+
+        theme.put("board.w", new Color(0xFFCE9E));
+        theme.put("board.b", new Color(0xD18B47));
+        theme.put("general.1", new Color(0x161B22));
+        theme.put("general.2", new Color(0x0D1117));
+
+        getNormalChessPieces(currentBoard).forEach((point, piece) -> {
+            currentBoard.placePiece(piece, point.x, point.y);
+        });
+
+        createChessBoardUI();
+
+        new Timer(25, e -> {
+
+            reapted++;
+
+            if (jFrame.getWidth() < 400 || jFrame.getHeight() < 250) {
+                jFrame.setSize(400, 250);
+            }
+
             int width = jFrame.getWidth() - jFrame.getHeight();
             jSidePanel.setPreferredSize(new Dimension(width, jFrame.getHeight()));
             jSidePanel.revalidate();
             if (jFrame.getHeight() > jFrame.getWidth()) {
                 jFrame.setSize(new Dimension(jFrame.getWidth(), jFrame.getWidth()));
             }
+
+            pieceJLabels.forEach(jLabel -> {
+                int size = jFrame.getHeight() / 8;
+                jLabel.setFont(jLabel.getFont().deriveFont((float) size * 0.7f)); // Schriftgröße anpassen
+            });
+
+            listModel.removeAllElements();
+            currentBoard.getMoveHistory().forEach(move -> {
+                String movedColor = move.movedPiece().isWhite() ? "White" : "Black";
+                String capturedColor = move.capturedPiece().isWhite() ? "White" : "Black";
+                String moveS = move.movedPiece().getName() + " [" + movedColor + "] " +
+                        move.fromX() + ", " + move.fromY() + " ---> " +
+                        move.toX() + ", " + move.toY() +
+                        move.capturedPiece().getName() + " [" + capturedColor + "] ";
+                addStringToHistory(moveS);
+            });
+
+            addStringToHistory(reapted + "");
+
         }).start();
     }
 
-    private static void createAndShowGUI() {
-        JFrame frame = new JFrame("Chess board [UI]");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(700, 500);
-        frame.setLayout(new BorderLayout());
-        frame.setResizable(true);
-        jFrame = frame;
+    public static HashMap<Point, Piece> getNormalChessPieces(ChessBoard board) {
 
-        for (int row = 0; row < 8; row++) {
+        HashMap<Point, Piece> pieces = new HashMap<>();
+
+        pieces.put(new Point(0, 0), new RookChessPiece(true, board));
+        pieces.put(new Point(0, 1), new KnightChessPiece(true, board));
+        pieces.put(new Point(0, 2), new BishopChessPiece(true, board));
+        pieces.put(new Point(0, 3), new QueenChessPiece(true, board));
+        pieces.put(new Point(0, 4), new KingChessPiece(true, board));
+        pieces.put(new Point(0, 5), new BishopChessPiece(true, board));
+        pieces.put(new Point(0, 6), new KnightChessPiece(true, board));
+        pieces.put(new Point(0, 7), new RookChessPiece(true, board));
+
+        for (int x = 0; x < 8; x++) {
+            pieces.put(new Point(1, x), new PawnChessPiece(true, board));
+        }
+
+        pieces.put(new Point(7, 0), new RookChessPiece(false, board));
+        pieces.put(new Point(7, 1), new KnightChessPiece(false, board));
+        pieces.put(new Point(7, 2), new BishopChessPiece(false, board));
+        pieces.put(new Point(7, 3), new QueenChessPiece(false, board));
+        pieces.put(new Point(7, 4), new KingChessPiece(false, board));
+        pieces.put(new Point(7, 5), new BishopChessPiece(false, board));
+        pieces.put(new Point(7, 6), new KnightChessPiece(false, board));
+        pieces.put(new Point(7, 7), new RookChessPiece(false, board));
+
+        for (int x = 0; x < 8; x++) {
+            pieces.put(new Point(6, x), new PawnChessPiece(false, board));
+        }
+
+        return pieces;
+    }
+
+
+    public static void createChessBoardUI() {
+        jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        jFrame.setSize(900, 600);
+        jFrame.setLayout(new BorderLayout());
+        jFrame.setResizable(true);
+
+        boardPanel = new JPanel(new GridLayout(8, 8)) {
+            @Override
+            public Dimension getPreferredSize() {
+                int size = computeSquareSize(this);
+                return new Dimension(size, size);
+            }
+        };
+
+        for (int row = 7; row >= 0; row--) {
             for (int col = 0; col < 8; col++) {
-                JPanel square = new JPanel();
-                if ((row + col) % 2 == 0) {
-                    square.setBackground(Color.WHITE);
-                } else {
-                    square.setBackground(Color.BLACK);
+                JPanel square = new JPanel(new BorderLayout());
+                boolean isBlack = (row + col) % 2 != 0;
+                square.setBackground(isBlack ? theme.get("board.w") : theme.get("board.b"));
+
+                HashMap<Point, String> points = new HashMap<>();
+
+                currentBoard.getPieces(true).forEach(piece -> {
+                    points.put(new Point(piece.getX(), piece.getY()), piece.getIco() + "");
+                });
+                currentBoard.getPieces(false).forEach(piece -> {
+                    points.put(new Point(piece.getX(), piece.getY()), piece.getIco() + "");
+                });
+
+                String text = points.get(new Point(col, row));
+                if (text != null) {
+                    JLabel label = new JLabel(text, SwingConstants.CENTER);
+                    Piece piece = currentBoard.getPiece(row, col);
+                    if (piece != null) {
+                        label.setForeground(piece.isWhite() ? Color.WHITE : Color.BLACK);
+                    } else {
+                        label.setForeground(Color.RED);
+                    }
+                    label.setFont(new Font("Segoe UI Symbol", Font.BOLD, 16));
+                    square.add(label, BorderLayout.CENTER);
+                    pieceJLabels.add(label);
                 }
+
                 boardPanel.add(square);
             }
         }
@@ -63,15 +161,17 @@ public class ChessJFrameGame {
         JScrollPane listScrollPane = new JScrollPane(list);
         JLabel title = new JLabel("Match History", SwingConstants.CENTER);
 
-        JPanel sidePanel = new JPanel(new BorderLayout());
-        sidePanel.add(title, BorderLayout.NORTH);
-        sidePanel.add(listScrollPane, BorderLayout.CENTER);
-        jSidePanel = sidePanel;
+        jSidePanel.add(title, BorderLayout.NORTH);
+        jSidePanel.add(listScrollPane, BorderLayout.CENTER);
+        list.setBackground(theme.get("general.1"));
+        jSidePanel.setBackground(theme.get("general.2"));
+        list.setForeground(Color.white);
+        title.setForeground(Color.WHITE);
 
-        frame.add(boardPanel, BorderLayout.CENTER);
-        frame.add(sidePanel, BorderLayout.EAST);
+        jFrame.add(boardPanel, BorderLayout.CENTER);
+        jFrame.add(jSidePanel, BorderLayout.EAST);
 
-        frame.setVisible(true);
+        jFrame.setVisible(true);
     }
 
     private static int computeSquareSize(JPanel panel) {
@@ -83,8 +183,11 @@ public class ChessJFrameGame {
         return Math.min(width, height);
     }
 
-    public void addElement(String text) {
+    public static void addStringToHistory(String text) {
         listModel.addElement(text);
     }
 
+    public static void addJPanelToSideBar(JPanel panel) {
+        jSidePanel.add(panel);
+    }
 }

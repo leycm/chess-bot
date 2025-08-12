@@ -11,7 +11,7 @@ public class PawnChessPiece extends Piece {
 
 
     public PawnChessPiece(boolean isWhite, ChessBoard board) {
-        super(isWhite, board, 1, "pawn_chess_piece", "Pawn", '♙');
+        super(isWhite, board, 1, "pawn_chess_piece", "Pawn", '♟');
     }
 
     @Override
@@ -24,7 +24,7 @@ public class PawnChessPiece extends Piece {
 
         List<int[]> fields = new ArrayList<>();
 
-        int direction = this.isWhite ? -1 : 1;
+        int direction = this.isWhite ? 1 : -1;
         int checkingY = getY() + direction;
 
         for (int i = -1; i < 2; i++) {
