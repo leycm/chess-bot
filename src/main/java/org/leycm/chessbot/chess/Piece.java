@@ -13,15 +13,17 @@ public abstract class Piece {
 
     protected final String id;
     protected final String name;
-    protected final char ico;
+    protected final char whiteIco;
+    protected final char blackIco;
 
-    public Piece(boolean isWhite, ChessBoard board, int level, String id, String name, char ico) {
+    public Piece(boolean isWhite, ChessBoard board, int level, String id, String name, char whiteIco, char blackIco) {
         this.isWhite = isWhite;
         this.board = board;
         this.level = level;
         this.id = id;
         this.name = name;
-        this.ico = ico;
+        this.whiteIco = whiteIco;
+        this.blackIco = blackIco;
         this.uuid = UUID.randomUUID();
     }
 
@@ -46,7 +48,11 @@ public abstract class Piece {
     }
 
     public char getIco() {
-        return ico;
+        if (isWhite) {
+            return whiteIco;
+        } else {
+            return blackIco;
+        }
     }
 
     public int getX() {
