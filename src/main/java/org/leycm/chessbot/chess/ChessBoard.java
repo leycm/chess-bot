@@ -10,7 +10,12 @@ public class ChessBoard {
     private final Piece[][] board = new Piece[8][8];
     private final List<Move> moveHistory = new ArrayList<>();
 
-    public ChessBoard() {}
+
+    private boolean whiteOnMove;
+
+    public ChessBoard() {
+        this.whiteOnMove = true;
+    }
 
     public void placePiece(Piece piece, int x, int y) {
         if (isValidCoord(x, y)) {
@@ -18,13 +23,13 @@ public class ChessBoard {
         }
     }
 
-    public boolean movePiece(int fromX, int fromY, int toX, int toY) {
+    public void movePiece(int fromX, int fromY, int toX, int toY) {
         if (!isValidCoord(fromX, fromY) || !isValidCoord(toX, toY))
-            return false;
+            return;
 
         Piece piece = board[fromY][fromX];
         if (piece == null || !piece.isValidMove(toX, toY))
-            return false;
+            return;
 
         Piece captured = board[toY][toX];
 
@@ -33,7 +38,7 @@ public class ChessBoard {
 
         moveHistory.add(new Move(fromX, fromY, toX, toY, piece, captured));
         piece.hasMovedJet = true;
-        return true;
+        whiteOnMove = !whiteOnMove;
     }
 
 
@@ -79,6 +84,13 @@ public class ChessBoard {
         return board;
     }
 
+    public int[] getBoardForAi() {
+        return Arrays.stream(board)
+                .flatMapToInt(row -> Arrays.stream(row)
+                        .mapToInt(p -> p == null ? 0 : p.getLevel() + (p.isWhite() ? 0 : 10)))
+                .toArray();
+    }
+
     public List<Piece> getPieces(boolean white) {
         List<Piece> pieces = new ArrayList<>();
         for (int y = 0; y < 8; y++) {
@@ -90,6 +102,14 @@ public class ChessBoard {
             }
         }
         return pieces;
+    }
+
+    public boolean isWhiteOnMove() {
+        return whiteOnMove;
+    }
+
+    public void setWhiteOnMove(boolean whiteObMove) {
+        this.whiteOnMove = whiteObMove;
     }
 
 

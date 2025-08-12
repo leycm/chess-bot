@@ -1,195 +1,79 @@
 package org.leycm.chessbot.model;
 
-
 import java.util.Random;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RecursiveAction;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class DenseLayer {
-    private float[][] weights;
-    private float[] biases;
-    private float[][] weightGradients;
-    private float[] biasGradients;
-    private float[] lastInput;
-    private float[] lastOutput;
-    private boolean useGPU;
-    private static final ForkJoinPool threadPool = new ForkJoinPool();
+    private final double[][] weights;
+    private final double[] biases;
+    private double[] lastInput;
+    private double[] lastOutput;
 
     public DenseLayer(int inputSize, int outputSize) {
-        this(inputSize, outputSize, false);
+        weights = new double[outputSize][inputSize];
+        biases = new double[outputSize];
+        initializeWeights(inputSize, outputSize);
     }
 
-    public DenseLayer(int inputSize, int outputSize, boolean useGPU) {
-        this.weights = new float[outputSize][inputSize];
-        this.biases = new float[outputSize];
-        this.weightGradients = new float[outputSize][inputSize];
-        this.biasGradients = new float[outputSize];
-        this.useGPU = useGPU;
-
-        Random rand = new Random();
-        float scale = (float) Math.sqrt(2.0 / inputSize);
+    private void initializeWeights(int inputSize, int outputSize) {
+        Random random = ThreadLocalRandom.current();
+        double limit = Math.sqrt(6.0 / (inputSize + outputSize));
 
         for (int i = 0; i < outputSize; i++) {
-            biases[i] = 0;
             for (int j = 0; j < inputSize; j++) {
-                weights[i][j] = (rand.nextFloat() - 0.5f) * 2 * scale;
+                weights[i][j] = (random.nextDouble() * 2 - 1) * limit;
             }
+            biases[i] = 0.0;
         }
     }
 
-    public float[] forward(float[] input) {
+    public double[] forward(double[] input) {
         this.lastInput = input.clone();
-        float[] output = new float[weights.length];
+        double[] output = new double[weights.length];
 
-        if (useGPU || weights.length > 256) {
-            // Use parallel computation for large layers
-            threadPool.invoke(new ForwardTask(input, output, 0, output.length));
-        } else {
-            // Sequential for small layers
-            for (int i = 0; i < output.length; i++) {
-                output[i] = biases[i];
-                for (int j = 0; j < input.length; j++) {
-                    output[i] += weights[i][j] * input[j];
-                }
-                output[i] = relu(output[i]);
+        for (int i = 0; i < weights.length; i++) {
+            double sum = biases[i];
+            for (int j = 0; j < input.length; j++) {
+                sum += weights[i][j] * input[j];
             }
+            output[i] = relu(sum);
         }
 
-        this.lastOutput = output.clone();
+        this.lastOutput = output;
         return output;
     }
 
-    private class ForwardTask extends RecursiveAction {
-        private final float[] input;
-        private final float[] output;
-        private final int start;
-        private final int end;
-
-        ForwardTask(float[] input, float[] output, int start, int end) {
-            this.input = input;
-            this.output = output;
-            this.start = start;
-            this.end = end;
-        }
-
-        @Override
-        protected void compute() {
-            if (end - start <= 64) {
-                for (int i = start; i < end; i++) {
-                    output[i] = biases[i];
-                    for (int j = 0; j < input.length; j++) {
-                        output[i] += weights[i][j] * input[j];
-                    }
-                    output[i] = relu(output[i]);
-                }
-            } else {
-                int mid = (start + end) / 2;
-                invokeAll(new ForwardTask(input, output, start, mid),
-                        new ForwardTask(input, output, mid, end));
-            }
-        }
-    }
-
-    public float[] backwardAccumulate(float[] outputGrad) {
-        float[] inputGrad = new float[lastInput.length];
-
-        // Apply ReLU derivative
-        for (int i = 0; i < outputGrad.length; i++) {
-            if (lastOutput[i] <= 0) {
-                outputGrad[i] = 0;
-            }
-        }
-
-        if (useGPU || weights.length > 256) {
-            // Parallel gradient computation
-            threadPool.invoke(new BackwardTask(outputGrad, inputGrad, 0, inputGrad.length));
-        } else {
-            // Sequential
-            for (int j = 0; j < inputGrad.length; j++) {
-                for (int i = 0; i < outputGrad.length; i++) {
-                    inputGrad[j] += weights[i][j] * outputGrad[i];
-                }
-            }
-        }
-
-        // Accumulate gradients instead of applying immediately
-        for (int i = 0; i < weights.length; i++) {
-            biasGradients[i] += outputGrad[i];
-            for (int j = 0; j < weights[i].length; j++) {
-                weightGradients[i][j] += outputGrad[i] * lastInput[j];
-            }
-        }
-
-        return inputGrad;
-    }
-
-    private class BackwardTask extends RecursiveAction {
-        private final float[] outputGrad;
-        private final float[] inputGrad;
-        private final int start;
-        private final int end;
-
-        BackwardTask(float[] outputGrad, float[] inputGrad, int start, int end) {
-            this.outputGrad = outputGrad;
-            this.inputGrad = inputGrad;
-            this.start = start;
-            this.end = end;
-        }
-
-        @Override
-        protected void compute() {
-            if (end - start <= 64) {
-                for (int j = start; j < end; j++) {
-                    for (int i = 0; i < outputGrad.length; i++) {
-                        inputGrad[j] += weights[i][j] * outputGrad[i];
-                    }
-                }
-            } else {
-                int mid = (start + end) / 2;
-                invokeAll(new BackwardTask(outputGrad, inputGrad, start, mid),
-                        new BackwardTask(outputGrad, inputGrad, mid, end));
-            }
-        }
-    }
-
-    public void updateWeights(float learningRate, int batchSize) {
-        float lr = learningRate / batchSize;
+    public double[] backward(double[] gradients, double learningRate) {
+        double[] inputGradients = new double[lastInput.length];
 
         for (int i = 0; i < weights.length; i++) {
-            biases[i] -= lr * biasGradients[i];
-            biasGradients[i] = 0; // Reset
+            double gradient = gradients[i] * reluDerivative(lastOutput[i]);
 
-            for (int j = 0; j < weights[i].length; j++) {
-                weights[i][j] -= lr * weightGradients[i][j];
-                weightGradients[i][j] = 0; // Reset
+            biases[i] += learningRate * gradient;
+
+            for (int j = 0; j < lastInput.length; j++) {
+                inputGradients[j] += weights[i][j] * gradient;
+                weights[i][j] += learningRate * gradient * lastInput[j];
             }
         }
+
+        return inputGradients;
     }
 
-    @Deprecated
-    public float[] backward(float[] outputGrad, float learningRate) {
-        float[] inputGrad = backwardAccumulate(outputGrad);
-        updateWeights(learningRate, 1);
-        return inputGrad;
-    }
-
-    private float relu(float x) {
+    private double relu(double x) {
         return Math.max(0, x);
     }
 
-    public float[][] getWeights() {
+    private double reluDerivative(double x) {
+        return x > 0 ? 1.0 : 0.0;
+    }
+
+    public double[][] getWeights() {
         return weights;
     }
 
-    public float[] getBiases() {
+    public double[] getBiases() {
         return biases;
     }
-
-    public void setWeights(float[][] weights) {
-        this.weights = weights;
-    }
-
-    public void setBiases(float[] biases) {
-        this.biases = biases;
-    }
 }
+
