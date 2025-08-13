@@ -5,11 +5,9 @@ import org.leycm.chessbot.chess.Piece;
 import org.leycm.chessbot.chess.pieces.*;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
 
 public class ChessJFrameGame {
@@ -19,11 +17,8 @@ public class ChessJFrameGame {
     private static JPanel jSidePanel = new JPanel(new BorderLayout());
     private static ChessBoard currentBoard = new ChessBoard();
     private static HashMap<String, Color> theme = new HashMap<>();
-    private static int reapted = 0;
 
     private static JPanel boardPanel;
-
-    private static List<JLabel> pieceJLabels = new ArrayList<>();
 
     public static void main(String[] args) {
 
@@ -32,17 +27,31 @@ public class ChessJFrameGame {
         theme.put("board.w", new Color(0xFFCE9E));
         theme.put("board.b", new Color(0xD18B47));
         theme.put("general.1", new Color(0x161B22));
-        theme.put("general.2", new Color(0x0D1117));
+        theme.put("general.2", new Color(0x0C0707));
 
         getNormalChessPieces(currentBoard).forEach((point, piece) -> {
             currentBoard.placePiece(piece, point.x, point.y);
         });
 
+        currentBoard.movePiece(2, 1, 2, 2);
+        if (currentBoard.getPiece(2, 2) != null) {
+            System.out.println("Has moved");
+        }
+
         createChessBoardUI();
 
-        new Timer(25, e -> {
+        new Timer(250, e -> {
 
-            reapted++;
+            jFrame.setVisible(true);
+
+            /*Piece piece = currentBoard.getPieces(true).get(new Random().nextInt(0, currentBoard.getPieces(true).size()));
+            int[] cord = Arrays.stream(piece.getValidFields()).findAny().orElse(null);
+            if (cord != null) {
+                System.out.println(piece.getName() + ": " + piece.getX() + " " + piece.getY() + " | " + cord[0] + " " + cord[1]);
+                currentBoard.movePiece(piece.getX(), piece.getY(), cord[0], cord[1]);
+            } else {
+                System.out.println("can't Load Piece: " + piece.getName());
+            }*/
 
             if (jFrame.getWidth() < 400 || jFrame.getHeight() < 250) {
                 jFrame.setSize(400, 250);
@@ -55,23 +64,21 @@ public class ChessJFrameGame {
                 jFrame.setSize(new Dimension(jFrame.getWidth(), jFrame.getWidth()));
             }
 
-            pieceJLabels.forEach(jLabel -> {
-                int size = jFrame.getHeight() / 8;
-                jLabel.setFont(jLabel.getFont().deriveFont((float) size * 0.7f)); // Schriftgröße anpassen
-            });
+            loadVisualBoard();
 
             listModel.removeAllElements();
             currentBoard.getMoveHistory().forEach(move -> {
+
                 String movedColor = move.movedPiece().isWhite() ? "White" : "Black";
                 String capturedColor = move.capturedPiece().isWhite() ? "White" : "Black";
+
                 String moveS = move.movedPiece().getName() + " [" + movedColor + "] " +
                         move.fromX() + ", " + move.fromY() + " ---> " +
                         move.toX() + ", " + move.toY() +
                         move.capturedPiece().getName() + " [" + capturedColor + "] ";
+
                 addStringToHistory(moveS);
             });
-
-            addStringToHistory(reapted + "");
 
         }).start();
     }
@@ -124,6 +131,27 @@ public class ChessJFrameGame {
             }
         };
 
+        loadVisualBoard();
+
+        JList<String> list = new JList<>(listModel);
+        JScrollPane listScrollPane = new JScrollPane(list);
+        JLabel title = new JLabel("Match History", SwingConstants.CENTER);
+
+        jSidePanel.add(title, BorderLayout.NORTH);
+        jSidePanel.add(listScrollPane, BorderLayout.CENTER);
+        list.setBackground(theme.get("general.1"));
+        jSidePanel.setBackground(theme.get("general.2"));
+        list.setForeground(Color.white);
+        title.setForeground(Color.WHITE);
+
+        jFrame.add(boardPanel, BorderLayout.CENTER);
+        jFrame.add(jSidePanel, BorderLayout.EAST);
+    }
+
+    private static void loadVisualBoard() {
+
+        boardPanel.removeAll();
+
         for (int row = 7; row >= 0; row--) {
             for (int col = 0; col < 8; col++) {
                 JPanel square = new JPanel(new BorderLayout());
@@ -148,30 +176,15 @@ public class ChessJFrameGame {
                     } else {
                         label.setForeground(Color.RED);
                     }
-                    label.setFont(new Font("Segoe UI Symbol", Font.BOLD, 16));
+                    int size = jFrame.getHeight() / 8;
+                    label.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 16));
+                    label.setFont(label.getFont().deriveFont((float) size * 0.7f));
                     square.add(label, BorderLayout.CENTER);
-                    pieceJLabels.add(label);
                 }
 
                 boardPanel.add(square);
             }
         }
-
-        JList<String> list = new JList<>(listModel);
-        JScrollPane listScrollPane = new JScrollPane(list);
-        JLabel title = new JLabel("Match History", SwingConstants.CENTER);
-
-        jSidePanel.add(title, BorderLayout.NORTH);
-        jSidePanel.add(listScrollPane, BorderLayout.CENTER);
-        list.setBackground(theme.get("general.1"));
-        jSidePanel.setBackground(theme.get("general.2"));
-        list.setForeground(Color.white);
-        title.setForeground(Color.WHITE);
-
-        jFrame.add(boardPanel, BorderLayout.CENTER);
-        jFrame.add(jSidePanel, BorderLayout.EAST);
-
-        jFrame.setVisible(true);
     }
 
     private static int computeSquareSize(JPanel panel) {

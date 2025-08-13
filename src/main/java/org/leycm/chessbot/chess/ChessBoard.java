@@ -21,17 +21,29 @@ public class ChessBoard {
     }
 
     public void movePiece(int fromX, int fromY, int toX, int toY) {
-        if (!isValidCoord(fromX, fromY) || !isValidCoord(toX, toY))
+        if (!isValidCoord(fromX, fromY) || !isValidCoord(toX, toY)) {
+            System.out.println("The Cord is outside the Board");
             return;
+        }
 
         Piece piece = board[fromY][fromX];
-        if (piece == null || !piece.isValidMove(toX, toY))
+        if (piece == null || !piece.isValidMove(toX, toY)) {
+            System.out.println("The Piece is null");
+            for (boolean[] booleans : getBooleanBoard()) {
+                System.out.println(Arrays.toString(booleans));
+            }
+            if (piece == null) {
+                return;
+            }
+            System.out.println("The Move is: " + piece.isValidMove(toX, toY));
             return;
+        }
 
         Piece captured = board[toY][toX];
 
         board[toY][toX] = piece;
         board[fromY][fromX] = null;
+        System.out.println("Has Moved");
 
         moveHistory.add(new Move(fromX, fromY, toX, toY, piece, captured));
         piece.hasMovedJet = true;
@@ -89,10 +101,13 @@ public class ChessBoard {
     }
 
     public boolean[][] getBooleanBoard() {
-        //noinspection SuspiciousToArrayCall
-        return Arrays.stream(board)
-                .map(Objects::isNull)
-                .toList().toArray(new boolean[8][8]);
+        boolean[][] result = new boolean[8][8];
+        for (int row = 0; row < board.length; row++) {
+            for (int col = 0; col < board[row].length; col++) {
+                result[row][col] = board[row][col] == null;
+            }
+        }
+        return result;
     }
 
     public List<Piece> getPieces(boolean white) {
