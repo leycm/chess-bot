@@ -1,9 +1,6 @@
 package org.leycm.chessbot.chess;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class ChessBoard {
 
@@ -80,15 +77,22 @@ public class ChessBoard {
         return moveHistory;
     }
 
-    public Piece[][] getBoard() {
+    public Piece[][] getPieceBoard() {
         return board;
     }
 
-    public int[] getBoardForAi() {
+    public int[] getLevelBoard() {
         return Arrays.stream(board)
                 .flatMapToInt(row -> Arrays.stream(row)
                         .mapToInt(p -> p == null ? 0 : p.getLevel() + (p.isWhite() ? 0 : 10)))
                 .toArray();
+    }
+
+    public boolean[][] getBooleanBoard() {
+        //noinspection SuspiciousToArrayCall
+        return Arrays.stream(board)
+                .map(Objects::isNull)
+                .toList().toArray(new boolean[8][8]);
     }
 
     public List<Piece> getPieces(boolean white) {

@@ -105,7 +105,7 @@ public class ChessTrainer {
         boolean whiteToMove = true;
 
         for (String moveStr : gameData.moves()) {
-            int[] boardState = board.getBoardForAi();
+            int[] boardState = board.getLevelBoard();
             int[] move = MoveConverter.moveStringToArray(moveStr, board);
 
             if (move[0] == -1) continue;
