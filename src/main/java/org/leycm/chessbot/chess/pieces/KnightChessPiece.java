@@ -5,12 +5,12 @@ import org.leycm.chessbot.chess.Piece;
 import org.leycm.chessbot.util.ArrayUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class KnightChessPiece extends Piece {
+
     public KnightChessPiece(boolean isWhite, ChessBoard board) {
-        super(isWhite, board, 2, "knight_chess_piece", "Knight", '♞');
+        super(isWhite, board, 3, "knight_chess_piece", "Knight", '♞');
     }
 
     @Override
@@ -20,52 +20,42 @@ public class KnightChessPiece extends Piece {
 
     @Override
     public int[][] getValidFields() {
-
         List<int[]> fields = new ArrayList<>();
+        int currentX = getX();
+        int currentY = getY();
 
-        getPossibleFields(1, 0).forEach(ints -> {
-            if (isFieldValid(ints[0], ints[1])) {
-                fields.add(ints);
-            }
-        });
-        getPossibleFields(0, 1).forEach(ints -> {
-            if (isFieldValid(ints[0], ints[1])) {
-                fields.add(ints);
-            }
-        });
-        getPossibleFields(-1, 0).forEach(ints -> {
-            if (isFieldValid(ints[0], ints[1])) {
-                fields.add(ints);
-            }
-        });
-        getPossibleFields(0, -1).forEach(ints -> {
-            if (isFieldValid(ints[0], ints[1])) {
-                fields.add(ints);
-            }
-        });
+        int[][] knightMoves = {
+                {+2, +1}, {+2, -1}, {-2, +1}, {-2, -1},
+                {+1, +2}, {+1, -2}, {-1, +2}, {-1, -2}
+        };
 
-        return fields.toArray(new int[][]{});
+        for (int[] move : knightMoves) {
+            int newX = currentX + move[0];
+            int newY = currentY + move[1];
+
+            if (canMoveTo(newX, newY)) {
+                fields.add(new int[]{newX, newY});
+            }
+        }
+
+        return fields.toArray(new int[0][]);
     }
 
     public boolean isFieldValid(int targetX, int targetY) {
-
-        Piece checkingPiece = this.board.getPiece(targetX, targetY);
-        return checkingPiece == null || this.isWhite != checkingPiece.isWhite();
+        return canMoveTo(targetX, targetY);
     }
 
     public List<int[]> getPossibleFields(int offsetX, int offsetY) {
-
         List<int[]> possibleFields = new ArrayList<>();
+        int currentX = getX();
+        int currentY = getY();
 
-        offsetX = Math.clamp(offsetX, -1, 1);
-        offsetY = Math.clamp(offsetY, -1, 1);
-
-        if (offsetX != 0 && offsetY == 0) {
-            possibleFields.add(new int[]{getX() + offsetY * 3, getY() + 1});
-            possibleFields.add(new int[]{getX() + offsetY * 3, getY() - 1});
-        } else if (offsetX == 0 && offsetY != 0) {
-            possibleFields.add(new int[]{getX() + 1, getY() + offsetX * 3});
-            possibleFields.add(new int[]{getX() - 1, getY() + offsetX * 3});
+        if (Math.abs(offsetX) == 1 && offsetY == 0) {
+            possibleFields.add(new int[]{currentX + offsetX * 2, currentY + 1});
+            possibleFields.add(new int[]{currentX + offsetX * 2, currentY - 1});
+        } else if (offsetX == 0 && Math.abs(offsetY) == 1) {
+            possibleFields.add(new int[]{currentX + 1, currentY + offsetY * 2});
+            possibleFields.add(new int[]{currentX - 1, currentY + offsetY * 2});
         }
 
         return possibleFields;

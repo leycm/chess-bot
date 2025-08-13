@@ -9,8 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RookChessPiece extends Piece {
+
     public RookChessPiece(boolean isWhite, ChessBoard board) {
-        super(isWhite, board, 4, "rook_chess_piece", "Rook", '♜');
+        super(isWhite, board, 5, "rook_chess_piece", "Rook", '♜');
     }
 
     @Override
@@ -20,53 +21,39 @@ public class RookChessPiece extends Piece {
 
     @Override
     public int[][] getValidFields() {
-
         List<int[]> fields = new ArrayList<>();
 
-        fields.addAll(checkInDirection(1, 0));
+        fields.addAll(getMovesInDirection(+1, +0));
+        fields.addAll(getMovesInDirection(-1, +0));
+        fields.addAll(getMovesInDirection(+0, +1));
+        fields.addAll(getMovesInDirection(+0, -1));
 
-        fields.addAll(checkInDirection(0, 1));
-
-        fields.addAll(checkInDirection(-1, 0));
-
-        fields.addAll(checkInDirection(0, -1));
-
-        return fields.toArray(new int[][]{});
+        return fields.toArray(new int[0][]);
     }
 
-    private @NotNull List<int[]> checkInDirection(int offsetX, int offsetY) {
+    private @NotNull List<int[]> getMovesInDirection(int deltaX, int deltaY) {
+        List<int[]> moves = new ArrayList<>();
+        int currentX = getX();
+        int currentY = getY();
 
-        List<int[]> fieldsInDirection = new ArrayList<>();
+        for (int i = 1; i < 8; i++) {
+            int newX = currentX + deltaX * i;
+            int newY = currentY + deltaY * i;
 
-        boolean isCollided = false;
-        int repeated = 0;
-
-        while (!isCollided) {
-
-            repeated++;
-            int checkingX = getX() + offsetX * repeated;
-            int checkingY = getY() + offsetY * repeated;
-
-            if (checkingX > 8 || checkingX < 0 || checkingY > 8 || checkingY < 0) {
-                isCollided = true;
+            if (!isValidCoordinate(newX, newY)) {
                 break;
             }
 
-            if (!isFreeSpot(checkingX, checkingY)) {
-                isCollided = true;
-                if (this.isWhite != this.board.getPiece(checkingX, checkingY).isWhite()) {
-                    fieldsInDirection.add(new int[]{checkingX, checkingY});
-                }
+            if (isEmpty(newX, newY)) {
+                moves.add(new int[]{newX, newY});
+            } else if (isEnemy(newX, newY)) {
+                moves.add(new int[]{newX, newY});
+                break;
             } else {
-                fieldsInDirection.add(new int[]{checkingX, checkingY});
+                break;
             }
-
         }
 
-        return fieldsInDirection;
-    }
-
-    private boolean isFreeSpot(int targetX, int targetY) {
-        return this.board.getPiece(targetX, targetY) == null;
+        return moves;
     }
 }

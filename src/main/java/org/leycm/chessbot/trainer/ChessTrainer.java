@@ -56,11 +56,9 @@ public class ChessTrainer {
 
     public void trainFromPgn(String pgnFilename, boolean multithreading) {
 
-        ChessPgnParser parser = switch (String.valueOf(multithreading)) {
-            case "true" -> new MultiThreadPgnParser();
-            case "false" -> new SingleThreadPgnParser();
-            default -> throw new IllegalStateException("Unexpected value: " + multithreading);
-        };
+        ChessPgnParser parser = multithreading ?
+                new MultiThreadPgnParser() :
+                new SingleThreadPgnParser();
 
         try {
 
@@ -105,7 +103,7 @@ public class ChessTrainer {
         boolean whiteToMove = true;
 
         for (String moveStr : gameData.moves()) {
-            int[] boardState = board.getLevelBoard();
+            int[] boardState = board.getLevelArray();
             int[] move = MoveConverter.moveStringToArray(moveStr, board);
 
             if (move[0] == -1) continue;

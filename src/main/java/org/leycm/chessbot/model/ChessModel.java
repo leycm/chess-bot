@@ -1,8 +1,10 @@
 package org.leycm.chessbot.model;
 
+import lombok.Getter;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+@Getter
 public class ChessModel {
     private final DenseLayer[] layers;
     private final int inputSize = 65;
@@ -70,7 +72,4 @@ public class ChessModel {
         return move[0] * 512 + move[1] * 64 + move[2] * 8 + move[3];
     }
 
-    public DenseLayer[] getLayers() {
-        return layers;
-    }
 }

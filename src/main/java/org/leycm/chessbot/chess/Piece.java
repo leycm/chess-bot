@@ -1,16 +1,17 @@
 package org.leycm.chessbot.chess;
 
+import lombok.Data;
+
 import java.util.UUID;
 
+@Data
 public abstract class Piece {
 
     protected final boolean isWhite;
     public boolean hasMovedJet = false;
     protected final ChessBoard board;
     protected final UUID uuid;
-
     protected final int level;
-
     protected final String id;
     protected final String name;
     protected final char ico;
@@ -29,26 +30,6 @@ public abstract class Piece {
 
     public abstract int[][] getValidFields();
 
-    public boolean isWhite() {
-        return isWhite;
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public char getIco() {
-        return ico;
-    }
-
     public int getX() {
         return board.getXForPiece(uuid);
     }
@@ -57,5 +38,26 @@ public abstract class Piece {
         return board.getYForPiece(uuid);
     }
 
-}
+    public char getChar() {
+        char letter = name.charAt(0);
+        return isWhite ? Character.toLowerCase(letter) : Character.toUpperCase(letter);
+    }
 
+
+    protected boolean isValidCoordinate(int x, int y) {
+        return board.isValidCoord(x, y);
+    }
+
+    protected boolean isEmpty(int x, int y) {
+        return board.getPiece(x, y) == null;
+    }
+
+    protected boolean isEnemy(int x, int y) {
+        Piece piece = board.getPiece(x, y);
+        return piece != null && piece.isWhite() != this.isWhite();
+    }
+
+    protected boolean canMoveTo(int x, int y) {
+        return isValidCoordinate(x, y) && (isEmpty(x, y) || isEnemy(x, y));
+    }
+}

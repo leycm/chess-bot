@@ -56,7 +56,7 @@ public class MoveConverter {
                 if (piece == null) continue;
 
                 if (matchesPieceType(piece, pieceType) &&
-                        piece.isWhite() == board.isWhiteOnMove() &&
+                        piece.isWhite() == board.isWhiteTurn() &&
                         canMoveTo(piece, fromX, fromY, toX, toY, board)) {
 
                     if (move.length() > 2 && Character.isLowerCase(move.charAt(1))) {

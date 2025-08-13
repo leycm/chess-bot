@@ -1,6 +1,5 @@
 package org.leycm.chessbot.chess.pieces;
 
-import org.jetbrains.annotations.NotNull;
 import org.leycm.chessbot.chess.ChessBoard;
 import org.leycm.chessbot.chess.Piece;
 import org.leycm.chessbot.util.ArrayUtils;
@@ -9,8 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class KingChessPiece extends Piece {
+
     public KingChessPiece(boolean isWhite, ChessBoard board) {
-        super(isWhite, board, 3, "king_chess_piece", "King", '♚');
+        super(isWhite, board, 1000, "king_chess_piece", "King", '♚'); // High level for king
     }
 
     @Override
@@ -20,28 +20,25 @@ public class KingChessPiece extends Piece {
 
     @Override
     public int[][] getValidFields() {
-
         List<int[]> fields = new ArrayList<>();
+        int currentX = getX();
+        int currentY = getY();
 
-        List<int[]> possibleFields = new ArrayList<>();
-        possibleFields.add(new int[]{getX() + 1, getY() + 1});
-        possibleFields.add(new int[]{getX() + 0, getY() + 1});
-        possibleFields.add(new int[]{getX() + -1, getY() + 1});
-        possibleFields.add(new int[]{getX() + 1, getY() + 0});
-        possibleFields.add(new int[]{getX() + 1, getY() + -1});
-        possibleFields.add(new int[]{getX() + 0, getY() + -1});
-        possibleFields.add(new int[]{getX() + -1, getY() + -1});
-        possibleFields.add(new int[]{getX() + -1, getY() + 0});
-        possibleFields.forEach(ints -> {
-            if (isFreeSpot(ints[0], ints[1]) || this.isWhite != this.board.getPiece(ints[0], ints[1]).isWhite()) {
-                fields.add(ints);
+        int[][] directions = {
+                {-1, -1}, {-1, +0}, {-1, +1},
+                {+0, -1},           {+0, +1},
+                {+1, -1}, {+1, +0}, {+1, +1}
+        };
+
+        for (int[] direction : directions) {
+            int newX = currentX + direction[0];
+            int newY = currentY + direction[1];
+
+            if (canMoveTo(newX, newY)) {
+                fields.add(new int[]{newX, newY});
             }
-        });
+        }
 
-        return fields.toArray(new int[][]{});
-    }
-
-    private boolean isFreeSpot(int targetX, int targetY) {
-        return this.board.getPiece(targetX, targetY) == null;
+        return fields.toArray(new int[0][]);
     }
 }

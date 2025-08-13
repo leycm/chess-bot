@@ -9,7 +9,6 @@ import java.util.List;
 
 public class PawnChessPiece extends Piece {
 
-
     public PawnChessPiece(boolean isWhite, ChessBoard board) {
         super(isWhite, board, 1, "pawn_chess_piece", "Pawn", '♟');
     }
@@ -21,31 +20,32 @@ public class PawnChessPiece extends Piece {
 
     @Override
     public int[][] getValidFields() {
-
         List<int[]> fields = new ArrayList<>();
+        int currentX = getX();
+        int currentY = getY();
 
-        int direction = this.isWhite ? 1 : -1;
-        int checkingY = getY() + direction;
+        int direction = isWhite ? -1 : 1;
 
-        for (int i = -1; i < 2; i++) {
+        int oneStepY = currentY + direction;
+        if (isValidCoordinate(currentX, oneStepY) && isEmpty(currentX, oneStepY)) {
+            fields.add(new int[]{currentX, oneStepY});
 
-            int checkingX = getX() + i;
 
-            if (!(checkingX > 8 || checkingX < 0 || checkingY > 8 || checkingY < 0)) {
-                if (i != 0) {
-                    if (this.board.getPiece(checkingX, checkingY) != null && this.isWhite != this.board.getPiece(checkingX, checkingY).isWhite()) {
-                        fields.add(new int[]{checkingX, checkingY});
-                    }
-                } else {
-                    if (this.board.getPiece(checkingX, checkingY) == null) {
-                        fields.add(new int[]{checkingX, checkingY});
-                    }
-                }
+            int twoStepY = currentY + (direction * 2);
+            if (!hasMovedJet && isValidCoordinate(currentX, twoStepY) && isEmpty(currentX, twoStepY)) {
+                fields.add(new int[]{currentX, twoStepY});
             }
-
         }
 
-        return fields.toArray(new int[][]{});
+        for (int deltaX : new int[]{-1, 1}) {
+            int captureX = currentX + deltaX;
+            int captureY = currentY + direction;
+
+            if (isValidCoordinate(captureX, captureY) && isEnemy(captureX, captureY)) {
+                fields.add(new int[]{captureX, captureY});
+            }
+        }
+
+        return fields.toArray(new int[0][]);
     }
 }
-
