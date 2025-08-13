@@ -39,7 +39,7 @@ public class ChessJFrameGame {
 
         currentBoard.movePiece(6, 1, 6, 2);
 
-        model = ModelLoader.loadModel("model/trained/chess_model-1.1.2-R0-SNAPSHOT.model");
+        model = ModelLoader.loadModel("model/trained/chess_model-1.1.3-R0-SNAPSHOT.model");
 
         currentBoard.setWhiteTurn(true);
 

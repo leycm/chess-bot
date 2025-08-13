@@ -2,8 +2,6 @@ package org.leycm.chessbot.util;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
-
 public class LoggerUtil {
 
     public static String formatMessage(String msg, Object... args) {

@@ -36,7 +36,7 @@ public class ChessTrainer {
     private final long startTime;
     private final String version;
 
-    private final int autoSave = 10000;
+    private final int autoSave = 1000;
     private long lastAutoSave = System.currentTimeMillis();
 
 
@@ -205,7 +205,7 @@ public class ChessTrainer {
         String filename = args.length < 1 ? "assets/train_games.pgn" : args[0];
         boolean multithreading = Arrays.stream(args).anyMatch(arg -> arg.equalsIgnoreCase("--multithreading"));
 
-        ChessTrainer trainer = new ChessTrainer("1.1.2-R0-SNAPSHOT", "Add link to Site in the stats");
+        ChessTrainer trainer = new ChessTrainer("1.1.4-R0-SNAPSHOT", "Try 2 to fix a bug with MoveConverter");
         // versions in models.info
 
         trainer.trainFromPgn(filename, multithreading);

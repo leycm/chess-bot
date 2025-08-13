@@ -5,157 +5,246 @@ import org.jetbrains.annotations.NotNull;
 import org.leycm.chessbot.chess.ChessBoard;
 import org.leycm.chessbot.chess.Piece;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class MoveConverter {
 
+    private static final Pattern UCI_WITH_PROMO = Pattern.compile("^([a-h][1-8])([a-h][1-8])([nbrqNBRQ])?$");
+    private static final Pattern ALG_PROMO = Pattern.compile("=([NBRQ])");
+    private static final Pattern CLEAN_SUFFIX = Pattern.compile("[+#]+$");
+
+    /**
+     * Versucht in dieser Reihenfolge:
+     * 1) UCI (e2e4, e7e8q)
+     * 2) Rochade (O-O, O-O-O, 0-0, 0-0-0)
+     * 3) Algebraische Notation mit Disambiguation, Captures, Promotions
+     */
     @Contract("null, _ -> new")
     public static int @NotNull [] moveStringToArray(String moveStr, ChessBoard board) {
-        if (moveStr == null || moveStr.length() < 2) return new int[]{-1, -1, -1, -1};
+        if (moveStr == null) return invalid();
+        String s = moveStr.trim();
 
-        moveStr = moveStr.replaceAll("[+#=NBRQ]", "").trim();
+        int[] uci = tryParseUci(s, board);
+        if (uci[0] != -1) return uci;
 
-        try {
-            if (moveStr.length() >= 4 && moveStr.charAt(1) >= '1' && moveStr.charAt(1) <= '8') {
-                int fromX = moveStr.charAt(0) - 'a';
-                int fromY = 8 - Character.getNumericValue(moveStr.charAt(1));
-                int toX = moveStr.charAt(2) - 'a';
-                int toY = 8 - Character.getNumericValue(moveStr.charAt(3));
+        int[] castle = tryParseCastling(s, board);
+        if (castle[0] != -1) return castle;
 
-                if (board.isValidCoord(fromX, fromY) && board.isValidCoord(toX, toY)) {
-                    return new int[]{fromX, fromY, toX, toY};
-                }
-            }
+        int[] alg = tryParseAlgebraic(s, board);
+        if (alg[0] != -1) return alg;
 
-            return parseAlgebraicNotation(moveStr, board);
-
-        } catch (Exception e) {
-            return new int[]{-1, -1, -1, -1};
-        }
+        return invalid();
     }
 
-    @Contract("_, _ -> new")
-    private static int @NotNull [] parseAlgebraicNotation(String move, ChessBoard board) {
-        move = move.replaceAll("x", "").replaceAll("[+#]", "").trim();
+    /* ===================== UCI ===================== */
 
-        if (move.length() < 2) return new int[]{-1, -1, -1, -1};
+    private static int @NotNull [] tryParseUci(@NotNull String s, ChessBoard board) {
+        Matcher m = UCI_WITH_PROMO.matcher(s.toLowerCase(Locale.ROOT));
+        if (!m.matches()) return invalid();
 
-        char targetFile = move.charAt(move.length() - 2);
-        char targetRank = move.charAt(move.length() - 1);
+        int[] from = squareToXY(m.group(1));
+        int[] to = squareToXY(m.group(2));
+        if (!validSquare(from) || !validSquare(to)) return invalid();
 
-        if (targetFile < 'a' || targetFile > 'h' || targetRank < '1' || targetRank > '8') {
-            return new int[]{-1, -1, -1, -1};
+        return new int[]{from[0], from[1], to[0], to[1]};
+    }
+
+    /* ===================== Castling ===================== */
+
+    private static int @NotNull [] tryParseCastling(@NotNull String s, ChessBoard board) {
+        String t = s.replaceAll("\\s+", "").toUpperCase(Locale.ROOT);
+        boolean kingSide = t.equals("O-O") || t.equals("0-0");
+        boolean queenSide = t.equals("O-O-O") || t.equals("0-0-0");
+
+        if (!kingSide && !queenSide) return invalid();
+
+        boolean white = board.isWhiteTurn();
+        int y = white ? 7 : 0;
+
+        int fromX = 4; // e
+        int toX = kingSide ? 6 : 2; // g oder c
+
+        Piece k = board.getPiece(fromX, y);
+        if (k == null || !k.getId().toLowerCase(Locale.ROOT).contains("king") || k.isWhite() != white) {
+            return invalid();
         }
 
-        int toX = targetFile - 'a';
-        int toY = 8 - Character.getNumericValue(targetRank);
+        return new int[]{fromX, y, toX, y};
+    }
 
-        char pieceType = move.length() > 2 && Character.isUpperCase(move.charAt(0)) ? move.charAt(0) : 'P';
+    /* ===================== Algebraisch ===================== */
 
+    private static int[] tryParseAlgebraic(String s, ChessBoard board) {
+        s = CLEAN_SUFFIX.matcher(s).replaceAll("").trim();
+
+        Character promo = null;
+        Matcher pm = ALG_PROMO.matcher(s);
+        if (pm.find()) {
+            promo = pm.group(1).charAt(0);
+            s = s.replace(pm.group(0), "");
+        }
+
+        boolean isCapture = s.contains("x");
+        s = s.replace("x", "");
+
+        s = s.replace("e.p.", "").replace("ep", "");
+
+        if (s.length() < 2) return invalid();
+        String targetSq = s.substring(s.length() - 2);
+        int[] to = squareToXY(targetSq);
+        if (!validSquare(to)) return invalid();
+
+        char first = s.charAt(0);
+        char pieceType = (Character.isUpperCase(first) && "KQRBN".indexOf(first) >= 0) ? first : 'P';
+
+        String middle = s.substring(pieceType == 'P' ? 0 : 1, s.length() - 2);
+
+        Character disFile = null;
+        Integer disRank = null;
+
+        for (char c : middle.toCharArray()) {
+            if (c >= 'a' && c <= 'h') disFile = c;
+            else if (c >= '1' && c <= '8') disRank = c - '0';
+        }
+
+        boolean white = board.isWhiteTurn();
+
+        List<int[]> candidates = new ArrayList<>();
         for (int fromY = 0; fromY < 8; fromY++) {
             for (int fromX = 0; fromX < 8; fromX++) {
-                Piece piece = board.getPiece(fromX, fromY);
-                if (piece == null) continue;
+                Piece p = board.getPiece(fromX, fromY);
+                if (p == null) continue;
+                if (p.isWhite() != white) continue;
+                if (!matchesPieceType(p, pieceType)) continue;
 
-                if (matchesPieceType(piece, pieceType) &&
-                        piece.isWhite() == board.isWhiteTurn() &&
-                        canMoveTo(piece, fromX, fromY, toX, toY, board)) {
+                if (disFile != null && fromX != (disFile - 'a')) continue;
+                if (disRank != null) {
+                    int yByRank = 8 - disRank; // invertierte Y
+                    if (fromY != yByRank) continue;
+                }
 
-                    if (move.length() > 2 && Character.isLowerCase(move.charAt(1))) {
-                        char sourceFile = move.charAt(1);
-                        if (fromX != sourceFile - 'a') continue;
+                if (p.isValidMove(to[0], to[1])) {
+                    candidates.add(new int[]{fromX, fromY, to[0], to[1]});
+                } else if (pieceType == 'P' && isPawnDiagonalToEmptyCapture(board, fromX, fromY, to[0], to[1])) {
+                    if (isEnPassantPossible(board, fromX, fromY, to[0], to[1])) {
+                        candidates.add(new int[]{fromX, fromY, to[0], to[1]});
                     }
-
-                    return new int[]{fromX, fromY, toX, toY};
                 }
             }
         }
 
-        return new int[]{-1, -1, -1, -1};
+        if (candidates.isEmpty()) return invalid();
+
+        return candidates.getFirst();
     }
 
+    /* ===================== Helpers ===================== */
+
     private static boolean matchesPieceType(@NotNull Piece piece, char pieceType) {
-        String pieceName = piece.getId();
+        String id = piece.getId().toLowerCase(Locale.ROOT);
         return switch (pieceType) {
-            case 'P' -> pieceName.contains("pawn");
-            case 'N' -> pieceName.contains("knight");
-            case 'B' -> pieceName.contains("bishop");
-            case 'R' -> pieceName.contains("rook");
-            case 'Q' -> pieceName.contains("queen");
-            case 'K' -> pieceName.contains("king");
+            case 'P' -> id.contains("pawn");
+            case 'N' -> id.contains("knight");
+            case 'B' -> id.contains("bishop");
+            case 'R' -> id.contains("rook");
+            case 'Q' -> id.contains("queen");
+            case 'K' -> id.contains("king");
             default -> false;
         };
     }
 
-    private static boolean canMoveTo(Piece piece, int fromX, int fromY, int toX, int toY, @NotNull ChessBoard board) {
-        if (!board.isValidCoord(toX, toY)) return false;
-
-        Piece targetPiece = board.getPiece(toX, toY);
-        if (targetPiece != null && targetPiece.isWhite() == piece.isWhite()) return false;
-
-        int dx = Math.abs(toX - fromX);
-        int dy = Math.abs(toY - fromY);
-
-        String pieceName = piece.getClass().getSimpleName().toLowerCase();
-
-        if (pieceName.contains("pawn")) {
-            int direction = piece.isWhite() ? -1 : 1;
-            if (targetPiece == null) {
-                return (toX == fromX && toY == fromY + direction) ||
-                        (toX == fromX && toY == fromY + 2 * direction && !piece.hasMovedYet);
-            } else {
-                return dx == 1 && toY == fromY + direction;
-            }
-        } else if (pieceName.contains("rook")) {
-            return (dx == 0 || dy == 0) && isPathClear(fromX, fromY, toX, toY, board);
-        } else if (pieceName.contains("bishop")) {
-            return dx == dy && isPathClear(fromX, fromY, toX, toY, board);
-        } else if (pieceName.contains("queen")) {
-            return (dx == 0 || dy == 0 || dx == dy) && isPathClear(fromX, fromY, toX, toY, board);
-        } else if (pieceName.contains("knight")) {
-            return (dx == 2 && dy == 1) || (dx == 1 && dy == 2);
-        } else if (pieceName.contains("king")) {
-            return dx <= 1 && dy <= 1;
-        }
-
-        return false;
-    }
-
-    private static boolean isPathClear(int fromX, int fromY, int toX, int toY, ChessBoard board) {
-        int dx = Integer.signum(toX - fromX);
-        int dy = Integer.signum(toY - fromY);
-
-        int x = fromX + dx;
-        int y = fromY + dy;
-
-        while (x != toX || y != toY) {
-            if (board.getPiece(x, y) != null) return false;
-            x += dx;
-            y += dy;
-        }
-
-        return true;
+    @Contract(value = " -> new", pure = true)
+    private static int @NotNull [] invalid() {
+        return new int[]{-1, -1, -1, -1};
     }
 
     @Contract(pure = true)
     public static @NotNull String arrayToMoveString(int @NotNull [] move) {
         if (move.length < 4 || move[0] < 0) return "";
-
         char fromFile = (char) ('a' + move[0]);
-        char fromRank = (char) ('1' + (7 - move[1]));
+        char fromRank = (char) ('1' + (7 - move[1])); // invertierte Y
         char toFile = (char) ('a' + move[2]);
         char toRank = (char) ('1' + (7 - move[3]));
-
         return "" + fromFile + fromRank + toFile + toRank;
     }
+
+    @Contract(pure = true)
+    private static boolean validSquare(int @NotNull [] xy) {
+        return xy[0] >= 0 && xy[0] < 8 && xy[1] >= 0 && xy[1] < 8;
+    }
+
+    /** "e4" -> [4, 4] (y invertiert: 8-4 = 4) */
+    private static int @NotNull [] squareToXY(String sq) {
+        if (sq == null || sq.length() != 2) return invalid();
+        char f = Character.toLowerCase(sq.charAt(0));
+        char r = sq.charAt(1);
+        if (f < 'a' || f > 'h' || r < '1' || r > '8') return invalid();
+        int x = f - 'a';
+        int y = 8 - (r - '0'); // y invertiert
+        return new int[]{x, y};
+    }
+
+    /** Pawn-diagonal auf leeres Zielfeld → potentiell en-passant. */
+    private static boolean isPawnDiagonalToEmptyCapture(@NotNull ChessBoard board, int fromX, int fromY, int toX, int toY) {
+        Piece p = board.getPiece(fromX, fromY);
+        if (p == null) return false;
+        if (!p.getId().toLowerCase(Locale.ROOT).contains("pawn")) return false;
+
+        if (board.getPiece(toX, toY) != null) return false;
+
+        int dx = Math.abs(toX - fromX);
+        int dy = toY - fromY;
+        if (dx != 1) return false;
+
+        if (p.isWhite() && dy != -1) return false;
+        if (!p.isWhite() && dy != 1) return false;
+
+        return true;
+    }
+
+    /**
+     * Prüft einfache En-Passant-Heuristik:
+     * - Letzter gegnerischer Zug war Doppelzug eines Bauern
+     * - Der überquerte Square ist unser Zielfeld (toX,toY)
+     */
+    private static boolean isEnPassantPossible(@NotNull ChessBoard board, int fromX, int fromY, int toX, int toY) {
+        List<ChessBoard.Move> hist = board.getMoveHistory();
+        if (hist.isEmpty()) return false;
+
+        ChessBoard.Move last = hist.get(hist.size() - 1);
+        Piece moved = last.movedPiece();
+        if (moved == null) return false;
+        if (!moved.getId().toLowerCase(Locale.ROOT).contains("pawn")) return false;
+
+        int dy = last.toY() - last.fromY();
+        if (Math.abs(dy) != 2) return false;
+
+        int passedY = last.fromY() + (dy > 0 ? 1 : -1);
+        int passedX = last.fromX();
+
+        if (toX != passedX || toY != passedY) return false;
+
+        return true;
+    }
+
+    /* ===================== Best-Move & Index-Helfer (unverändert) ===================== */
 
     public static int @NotNull [] findBestMove(@NotNull ChessModel model, int[] boardState) {
         double[] predictions = model.predict(boardState);
 
+        // Schutz gegen NaNs/Inf
         int bestMoveIndex = 0;
-        double bestScore = predictions[0];
+        double bestScore = Double.NEGATIVE_INFINITY;
 
-        for (int i = 1; i < predictions.length; i++) {
-            if (predictions[i] > bestScore) {
-                bestScore = predictions[i];
+        for (int i = 0; i < predictions.length; i++) {
+            double v = predictions[i];
+            if (Double.isNaN(v) || Double.isInfinite(v)) continue;
+            if (v > bestScore) {
+                bestScore = v;
                 bestMoveIndex = i;
             }
         }
@@ -167,9 +256,8 @@ public class MoveConverter {
     private static int @NotNull [] indexToMove(int index) {
         int fromX = index / 512;
         int fromY = (index % 512) / 64;
-        int toX = (index % 64) / 8;
-        int toY = index % 8;
-
+        int toX = ((index % 512) % 64) / 8;
+        int toY = ((index % 512) % 64) % 8;
         return new int[]{fromX, fromY, toX, toY};
     }
 }
