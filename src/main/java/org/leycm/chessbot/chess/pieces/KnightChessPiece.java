@@ -38,7 +38,7 @@ public class KnightChessPiece extends Piece {
             }
         }
 
-        return fields.toArray(new int[0][]);
+        return fields.toArray(new int[][]{});
     }
 
     public boolean isFieldValid(int targetX, int targetY) {

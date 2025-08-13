@@ -5,7 +5,6 @@ import org.leycm.chessbot.chess.Piece;
 import org.leycm.chessbot.chess.pieces.*;
 import org.leycm.chessbot.model.ChessModel;
 import org.leycm.chessbot.model.ModelLoader;
-import org.leycm.chessbot.model.MoveConverter;
 
 import javax.swing.*;
 import javax.swing.Timer;
@@ -21,6 +20,10 @@ public class ChessJFrameGame {
     private static ChessBoard currentBoard = new ChessBoard();
     private static HashMap<String, Color> theme = new HashMap<>();
     private static ChessModel model = new ChessModel();
+    private static volatile boolean leftMousePressed = false;
+    private static volatile boolean rightMousePressed = false;
+    private static int fromX = -1;
+    private static int fromY = -1;
 
     private static JPanel boardPanel;
 
@@ -37,19 +40,20 @@ public class ChessJFrameGame {
             currentBoard.placePiece(piece, point.x, point.y);
         });
 
-        currentBoard.movePiece(6, 1, 6, 2);
-
         model = ModelLoader.loadModel("model/trained/chess_model-1.1.3-R0-SNAPSHOT.model");
 
         currentBoard.setWhiteTurn(true);
 
+        setupGlobalMouseTracker(jFrame);
+
         createChessBoardUI();
-        new Timer(250, e -> {
+        new Timer(100, e -> {
 
             jFrame.setVisible(true);
+
             boolean team = true;
 
-            int[] gameState = new int[65];
+            /*int[] gameState = new int[65];
             int[] levelArray = currentBoard.getLevelArray();
 
             for (int i = 0; i < levelArray.length; i++) {
@@ -61,7 +65,7 @@ public class ChessJFrameGame {
             int[] bestMove = MoveConverter.findBestMove(model, gameState);
 
             currentBoard.movePiece(bestMove[0], bestMove[1], bestMove[2], bestMove[3]);
-            System.out.println(Arrays.toString(bestMove));
+            System.out.println(Arrays.toString(bestMove));*/
 
             /*or (int i = 0; i < 2; i++) {
 
@@ -179,7 +183,36 @@ public class ChessJFrameGame {
         jFrame.add(jSidePanel, BorderLayout.EAST);
     }
 
+    private static Point getHoveredSquareCoords() {
+        try {
+            // Mausposition in Screen-Koordinaten
+            Point mouseScreen = MouseInfo.getPointerInfo().getLocation();
+            // Position des Brett-Panels in Screen-Koordinaten
+            Point boardScreen = boardPanel.getLocationOnScreen();
+
+            // Mausposition relativ zum Brett
+            int relX = mouseScreen.x - boardScreen.x;
+            int relY = mouseScreen.y - boardScreen.y;
+
+            int squareSize = boardPanel.getWidth() / 8;
+
+            // Maus außerhalb? → null
+            if (relX < 0 || relY < 0 || relX >= boardPanel.getWidth() || relY >= boardPanel.getHeight()) {
+                return null;
+            }
+
+            // Spalte & Reihe bestimmen
+            int col = relX / squareSize;
+            int row = relY / squareSize;
+
+            return new Point(col, row);
+        } catch (IllegalComponentStateException e) {
+            return null; // falls UI noch nicht sichtbar ist
+        }
+    }
+
     private static void loadVisualBoard() {
+        Point hovered = getHoveredSquareCoords();
 
         boardPanel.removeAll();
 
@@ -190,32 +223,89 @@ public class ChessJFrameGame {
                 square.setBackground(isBlack ? theme.get("board.w") : theme.get("board.b"));
 
                 HashMap<Point, String> points = new HashMap<>();
+                currentBoard.getPieces(true).forEach(piece ->
+                        points.put(new Point(piece.getX(), piece.getY()), piece.getIco() + "")
+                );
 
-                currentBoard.getPieces(true).forEach(piece -> {
-                    points.put(new Point(piece.getX(), piece.getY()), piece.getIco() + "");
-                });
-                currentBoard.getPieces(false).forEach(piece -> {
-                    points.put(new Point(piece.getX(), piece.getY()), piece.getIco() + "");
-                });
+                currentBoard.getPieces(false).forEach(piece ->
+                        points.put(new Point(piece.getX(), piece.getY()), piece.getIco() + "")
+                );
 
                 String text = points.get(new Point(col, row));
                 if (text != null) {
                     JLabel label = new JLabel(text, SwingConstants.CENTER);
                     Piece piece = currentBoard.getPiece(col, row);
-                    if (piece != null) {
-                        label.setForeground(piece.isWhite() ? Color.WHITE : Color.BLACK);
-                    } else {
-                        label.setForeground(Color.RED);
-                    }
+                    label.setForeground(piece != null && piece.isWhite() ? Color.WHITE : Color.BLACK);
                     int size = jFrame.getHeight() / 8;
-                    label.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 16));
                     label.setFont(label.getFont().deriveFont((float) size * 0.7f));
                     square.add(label, BorderLayout.CENTER);
+                }
+
+                Piece piece = currentBoard.getPiece(fromX, fromY);
+                if (piece != null) {
+                    for (int[] validField : piece.getValidFields()) {
+                        if (validField[0] == col && validField[1] == row) {
+                            square.setBackground(Color.white);
+                        }
+                    }
+                }
+
+                if (leftMousePressed && fromX == -1 && fromY == -1 && currentBoard.getPiece(hovered.x, hovered.y) != null) {
+                    if (currentBoard.getPiece(hovered.x, hovered.y).isWhite() == currentBoard.isWhiteTurn()) {
+                        fromX = hovered.x;
+                        fromY = hovered.y;
+                    }
+                } else if (rightMousePressed) {
+                    if (piece != null && col != fromY && row != fromX && fromX != -1 && currentBoard.getPiece(fromX, fromY).isValidMove(hovered.x, hovered.y)) {
+                        System.out.println("Moving " + piece.getName());
+                        System.out.println("   [" + fromX + ", " + fromY + " --> " + hovered.x + ", " + hovered.y + "]");
+                        currentBoard.movePiece(fromX, fromY, hovered.x, hovered.y);
+                    }
+                    fromX = -1;
+                    fromY = -1;
+                }
+
+                if (hovered != null && hovered.x == col && hovered.y == row) {
+                    if (fromX != -1 && fromY != -1) {
+                        square.setBorder(BorderFactory.createLineBorder(Color.blue, 3));
+                    } else {
+                        square.setBorder(BorderFactory.createLineBorder(Color.green, 3));
+                    }
+                } else {
+                    square.setBorder(BorderFactory.createEmptyBorder());
+                }
+
+                if (col == fromX && row == fromY) {
+                    square.setBorder(BorderFactory.createLineBorder(Color.white, 9));
                 }
 
                 boardPanel.add(square);
             }
         }
+    }
+
+    public static void setupGlobalMouseTracker(Component c) {
+        c.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                if (e.getButton() == java.awt.event.MouseEvent.BUTTON1) {
+                    leftMousePressed = true;
+                }
+                if (e.getButton() == java.awt.event.MouseEvent.BUTTON3) {
+                    rightMousePressed = true;
+                }
+            }
+
+            @Override
+            public void mouseReleased(java.awt.event.MouseEvent e) {
+                if (e.getButton() == java.awt.event.MouseEvent.BUTTON1) {
+                    leftMousePressed = false;
+                }
+                if (e.getButton() == java.awt.event.MouseEvent.BUTTON3) {
+                    rightMousePressed = false;
+                }
+            }
+        });
     }
 
     private static int computeSquareSize(JPanel panel) {
