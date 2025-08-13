@@ -8,7 +8,7 @@ import java.util.UUID;
 public abstract class Piece {
 
     protected final boolean isWhite;
-    public boolean hasMovedJet = false;
+    public boolean hasMovedYet = false;
     protected final ChessBoard board;
     protected final UUID uuid;
     protected final int level;

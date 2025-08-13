@@ -100,7 +100,7 @@ public class MoveConverter {
             int direction = piece.isWhite() ? -1 : 1;
             if (targetPiece == null) {
                 return (toX == fromX && toY == fromY + direction) ||
-                        (toX == fromX && toY == fromY + 2 * direction && !piece.hasMovedJet);
+                        (toX == fromX && toY == fromY + 2 * direction && !piece.hasMovedYet);
             } else {
                 return dx == 1 && toY == fromY + direction;
             }

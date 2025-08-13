@@ -5,6 +5,7 @@ import org.leycm.chessbot.chess.Piece;
 import org.leycm.chessbot.util.ArrayUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class PawnChessPiece extends Piece {
@@ -32,7 +33,7 @@ public class PawnChessPiece extends Piece {
 
 
             int twoStepY = currentY + (direction * 2);
-            if (!hasMovedJet && isValidCoordinate(currentX, twoStepY) && isEmpty(currentX, twoStepY)) {
+            if (!hasMovedYet && isValidCoordinate(currentX, twoStepY) && isEmpty(currentX, twoStepY)) {
                 fields.add(new int[]{currentX, twoStepY});
             }
         }

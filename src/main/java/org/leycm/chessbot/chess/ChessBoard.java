@@ -30,28 +30,18 @@ public class ChessBoard {
         }
 
         Piece piece = board[fromY][fromX];
-        if (piece == null) {
-            System.out.println("No piece at source position");
-            return;
-        }
+        if (piece == null) return;
 
-        if (!piece.isValidMove(toX, toY)) {
-            System.out.println("Invalid move for piece: " + piece.getName());
-            return;
-        }
+        if (!piece.isValidMove(toX, toY)) return;
 
         Piece captured = board[toY][toX];
 
-        // Execute the move
         board[toY][toX] = piece;
         board[fromY][fromX] = null;
 
-        // Update move history and piece state
         moveHistory.add(new Move(fromX, fromY, toX, toY, piece, captured));
-        piece.hasMovedJet = true;
+        piece.hasMovedYet = true;
         whiteTurn = !whiteTurn;
-
-        System.out.println("Move executed: " + piece.getName() + " from (" + fromX + "," + fromY + ") to (" + toX + "," + toY + ")");
     }
 
     public Piece getPiece(int x, int y) {
@@ -142,13 +132,11 @@ public class ChessBoard {
         return pieces;
     }
 
-    @Override
-    public String toString() {
+    public String toVisualString() {
         StringBuilder sb = new StringBuilder();
 
-        // Reihen von 8 bis 1 (oben nach unten)
         for (int y = 0; y < 8; y++) {
-            char rowLabel = (char) ('h' - y); // h,g,f,...,a
+            char rowLabel = (char) ('h' - y);
             sb.append(rowLabel).append("  ");
 
             for (int x = 0; x < 8; x++) {
@@ -158,7 +146,6 @@ public class ChessBoard {
             sb.append("\n");
         }
 
-        // Spaltenbeschriftung
         sb.append("   ");
         for (int x = 1; x <= 8; x++) {
             sb.append(x).append("  ");
