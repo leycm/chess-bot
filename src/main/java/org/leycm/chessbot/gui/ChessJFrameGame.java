@@ -17,7 +17,7 @@ public class ChessJFrameGame {
     private static DefaultListModel<String> listModel = new DefaultListModel<>();
     private static JFrame jFrame = new JFrame("Chess Board [UI]");
     private static JPanel jSidePanel = new JPanel(new BorderLayout());
-    private static ChessBoard currentBoard = new ChessBoard(false);
+    private static ChessBoard currentBoard = new ChessBoard(true);
     private static HashMap<String, Color> theme = new HashMap<>();
     private static ChessModel model = new ChessModel();
     private static volatile boolean leftMousePressed = false;
@@ -29,16 +29,12 @@ public class ChessJFrameGame {
 
     public static void main(String[] args) throws IOException {
 
-        currentBoard = new ChessBoard(false);
+        currentBoard = new ChessBoard(true);
 
         theme.put("board.w", new Color(0xFFCE9E));
         theme.put("board.b", new Color(0xD18B47));
         theme.put("general.1", new Color(0x161B22));
         theme.put("general.2", new Color(0x0C0707));
-
-        getNormalChessPieces(currentBoard).forEach((point, piece) -> {
-            currentBoard.placePiece(piece, point.x, point.y);
-        });
 
         model = ModelLoader.loadModel("model/trained/chess_model-1.1.3-R0-SNAPSHOT.model");
 
@@ -46,10 +42,8 @@ public class ChessJFrameGame {
 
         setupGlobalMouseTracker(jFrame);
 
-        createChessBoardUI();
-        new Timer(25, _ -> {
-
-            jFrame.setVisible(true);
+        // Ai Move
+        new Timer(1000, actionEvent -> {
 
             boolean team = true;
 
@@ -79,6 +73,24 @@ public class ChessJFrameGame {
                 }
                 team = !team;
             }*/
+
+            if (!currentBoard.isWhiteTurn()) {
+                try {
+                    ModelLoader.makeBestMove(currentBoard);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+        }).start();
+
+        createChessBoardUI();
+
+        //Update Visual
+
+        new Timer(50, actionEvent -> {
+
+            jFrame.setVisible(true);
 
             if (jFrame.getWidth() < 400 || jFrame.getHeight() < 250) {
                 jFrame.setSize(400, 250);
@@ -283,14 +295,6 @@ public class ChessJFrameGame {
                 if (col == fromX && row == fromY) {
                     square.setBorder(BorderFactory.createLineBorder(Color.green, 3));
                 }
-
-//                if (!currentBoard.isWhiteTurn()) {
-//                    try {
-//                        ModelLoader.makeBestMove(currentBoard);
-//                    } catch (Exception e) {
-//                        throw new RuntimeException(e);
-//                    }
-//                }
 
                 boardPanel.add(square);
             }
