@@ -2,13 +2,14 @@ package org.leycm.chessbot.chess;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
 public class ChessBoard {
 
     private final Piece[][] board = new Piece[8][8];
-    private final List<Move> moveHistory = new ArrayList<>();
+    private final List<ChessMove> moveHistory = new ArrayList<>();
 
     @Setter @Getter
     private boolean whiteTurn;
@@ -24,23 +25,28 @@ public class ChessBoard {
     }
 
     public void movePiece(int fromX, int fromY, int toX, int toY) {
-        if (!isValidCoord(fromX, fromY) || !isValidCoord(toX, toY)) {
+        movePiece(new ChessMove(fromX, fromY, toX, toY, this));
+    }
+
+    public void movePiece(@NotNull ChessMove move) {
+        if (!isValidCoord(move.getFromX(), move.getFromY()) || !isValidCoord(move.getToX(), move.getToY())) {
             System.out.println("The coordinate is outside the board");
             return;
         }
 
-        Piece piece = board[fromY][fromX];
+        Piece piece = board[move.getFromX()][move.getFromY()];
         if (piece == null) return;
 
-        if (!piece.isValidMove(toX, toY)) return;
+        if (!piece.isValidMove(move.getToX(), move.getToY())) return;
 
-        Piece captured = board[toY][toX];
 
-        board[toY][toX] = piece;
-        board[fromY][fromX] = null;
+        board[move.getToX()][move.getToY()] = piece;
+        board[move.getFromX()][move.getFromY()] = null;
 
-        moveHistory.add(new Move(fromX, fromY, toX, toY, piece, captured));
+        moveHistory.add(move);
+
         piece.hasMovedYet = true;
+
         whiteTurn = !whiteTurn;
     }
 
@@ -58,7 +64,7 @@ public class ChessBoard {
                 }
             }
         }
-        return -1; // -1 if piece not found
+        return -1; // if piece not found
     }
 
     public int getYForPiece(UUID uuid) {
@@ -70,14 +76,14 @@ public class ChessBoard {
                 }
             }
         }
-        return -1; // -1 if piece not found
+        return -1; // if piece not found
     }
 
     public boolean isValidCoord(int x, int y) {
         return x >= 0 && x < 8 && y >= 0 && y < 8;
     }
 
-    public List<Move> getMoveHistory() {
+    public List<ChessMove> getMoveHistory() {
         return new ArrayList<>(moveHistory);
     }
 
@@ -90,7 +96,7 @@ public class ChessBoard {
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
                 Piece piece = board[y][x];
-                result[y][x] = piece == null ? 0 : piece.getLevel() + (piece.isWhite() ? 0 : 10);
+                result[y][x] = piece == null ? 0 : piece.getLevel() * (piece.isWhite() ? 1 : -1);
             }
         }
         return result;
@@ -115,8 +121,19 @@ public class ChessBoard {
     public int[] getLevelArray() {
         return Arrays.stream(board)
                 .flatMapToInt(row -> Arrays.stream(row)
-                        .mapToInt(p -> p == null ? 0 : p.getLevel() + (p.isWhite() ? 0 : 10)))
+                        .mapToInt(p -> p == null ? 0 : p.getLevel() * (p.isWhite() ? 1 : -1)))
                 .toArray();
+    }
+
+    public int[] getGameStateArray() {
+            int[] result = new int[65];
+            int[] boardValues = Arrays.stream(board)
+                    .flatMapToInt(row -> Arrays.stream(Arrays.stream(row)
+                            .mapToInt(p -> p == null ? 0 : p.getLevel() * (p.isWhite() ? 1 : -1))
+                            .toArray())).toArray();
+            System.arraycopy(boardValues, 0, result, 0, boardValues.length);
+            result[64] = whiteTurn ? 1 : 0;
+            return result;
     }
 
     public List<Piece> getPieces(boolean white) {
@@ -141,7 +158,7 @@ public class ChessBoard {
 
             for (int x = 0; x < 8; x++) {
                 Piece piece = board[y][x];
-                sb.append(piece != null ? piece.getChar() : '.').append("  ");
+                sb.append(piece != null ? piece.getColorChar() : '.').append("  ");
             }
             sb.append("\n");
         }
@@ -154,13 +171,5 @@ public class ChessBoard {
 
         return sb.toString();
     }
-
-
-    public record Move(int fromX, int fromY,
-                       int toX, int toY,
-                       Piece movedPiece,
-                       Piece capturedPiece
-    ) { }
-
 
 }

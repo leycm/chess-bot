@@ -90,22 +90,22 @@ public class SingleThreadPgnParser implements ChessPgnParser {
         }
     }
 
-    private @NotNull List<String> extractMoves(@NotNull String movesText) {
-        List<String> moves = new ArrayList<>();
-        String cleanText = movesText.replaceAll("\\{[^}]*\\}", "")
-                .replaceAll("\\([^)]*\\)", "")
-                .replaceAll("[0-1]/[0-1]-[0-1]/[0-1]", "")
-                .replaceAll("1-0|0-1|1/2-1/2", "");
+    public static @NotNull List<String> extractMoves(@NotNull String pgn) {
+        String cleaned = pgn.replaceAll("\\{[^}]*}", "");
+        cleaned = cleaned.replaceAll("\\d+\\.\\.\\.|\\d+\\.", "");
+        cleaned = cleaned.replaceAll("(1-0|0-1|1/2-1/2)", "");
 
-        Matcher matcher = MOVE_PATTERN.matcher(cleanText);
-        while (matcher.find()) {
-            String move = matcher.group(2);
-            if (move != null && !move.isEmpty()) {
-                moves.add(move.trim());
+        String[] tokens = cleaned.trim().split("\\s+");
+
+        List<String> moves = new ArrayList<>();
+        for (String token : tokens) {
+            if (!token.isEmpty()) {
+                moves.add(token);
             }
         }
 
         return moves;
+
     }
 
     private int parseElo(String eloStr) {

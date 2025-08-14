@@ -100,24 +100,45 @@ public class ChessTrainer {
         ChessBoard board = new ChessBoard();
         setupInitialPosition(board);
 
-        boolean whiteToMove = true;
+        board.setWhiteTurn(true);
+
+        List<String> movesStringVisuals = new ArrayList<>();
+
+        movesStringVisuals.add("-------------------------------------------\n");
+        movesStringVisuals.add(" New game \""+ gameData.result() + "\" link: " + gameData.link() + "  \n");
+        movesStringVisuals.add("-------------------------------------------\n");
 
         for (String moveStr : gameData.moves()) {
-            int[] boardState = board.getLevelArray();
+            movesStringVisuals.add("========= New Move for " + (board.isWhiteTurn() ? "White" : "Black") + " ====\n");
+
+            int[] boardState = board.getGameStateArray();
             int[] move = MoveConverter.moveStringToArray(moveStr, board);
 
-            if (move[0] == -1) continue;
+            if (move[0] == -1) {
+                movesStringVisuals.add("Fail to parse move \"" + moveStr + "\"\n");
+                board.setWhiteTurn(!board.isWhiteTurn());
 
-            double reward = calculateReward(gameData, whiteToMove);
+                movesStringVisuals.add("========= Move is done =========\n");
+                continue;
+            }
+            movesStringVisuals.add("Parsed move from \"" + moveStr + "\" to \"" + Arrays.toString(move) + "\"\n");
+
+            double reward = calculateReward(gameData, board.isWhiteTurn());
 
             if (board.getPiece(move[0], move[1]) != null) {
                 board.movePiece(move[0], move[1], move[2], move[3]);
                 model.train(boardState, move, reward);
                 samplesProcessed.incrementAndGet();
+                movesStringVisuals.add("Trained Sample for " + (board.isWhiteTurn() ? "White" : "Black") + "\n");
+                movesStringVisuals.add(board.toVisualString());
             }
 
-            whiteToMove = !whiteToMove;
+            board.setWhiteTurn(!board.isWhiteTurn());
+
+            movesStringVisuals.add("========= Move is done =========\n");
         }
+
+        movesStringVisuals.forEach(System.out::printf);
     }
 
     private double calculateReward(@NotNull SingleThreadPgnParser.GameData gameData, boolean whiteToMove) {
@@ -205,9 +226,9 @@ public class ChessTrainer {
         String filename = args.length < 1 ? "assets/train_games.pgn" : args[0];
         boolean multithreading = Arrays.stream(args).anyMatch(arg -> arg.equalsIgnoreCase("--multithreading"));
 
-        ChessTrainer trainer = new ChessTrainer("1.1.4-R0-SNAPSHOT", "Try 2 to fix a bug with MoveConverter");
+        ChessTrainer trainer = new ChessTrainer("1.1.5-R0-TEST", "Try 3 to test a bug with MoveConverter");
         // versions in models.info
 
-        trainer.trainFromPgn(filename, multithreading);
+        trainer.trainFromPgn(filename, false);
     }
 }

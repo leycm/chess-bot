@@ -38,11 +38,14 @@ public abstract class Piece {
         return board.getYForPiece(uuid);
     }
 
-    public char getChar() {
+    public char getColorChar() {
         char letter = name.charAt(0);
         return isWhite ? Character.toLowerCase(letter) : Character.toUpperCase(letter);
     }
 
+    public char getChar() {
+        return Character.toUpperCase(name.charAt(0));
+    }
 
     protected boolean isValidCoordinate(int x, int y) {
         return board.isValidCoord(x, y);

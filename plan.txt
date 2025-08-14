@@ -1,0 +1,27 @@
+A java powered chess game against Ai
+
+Classes:
+
+src/main/java/
+  org/leycm/chessbot/
+
+    chess/
+      pieces/ -> extends ChessPiece.java
+        BishopChessPiece.java
+        KingChessPiece.java
+        KnightChessPiece.java
+      ChessBoard.java
+      ChessPiece.java -> abstract class
+
+    model/
+      ChessModel.java
+      DenseLayer.java
+      ModelLoader.java
+      MoveConverter.java
+
+    trainer/
+      parser/
+        MultiThreadPgnParser.java
+        SingleThreadPgnParser.java
+      ChessPgnParser.java -> interface
+      ChessTrainer.java
