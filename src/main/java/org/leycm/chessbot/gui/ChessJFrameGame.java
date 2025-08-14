@@ -47,7 +47,7 @@ public class ChessJFrameGame {
         setupGlobalMouseTracker(jFrame);
 
         createChessBoardUI();
-        new Timer(100, e -> {
+        new Timer(25, e -> {
 
             jFrame.setVisible(true);
 
@@ -67,7 +67,7 @@ public class ChessJFrameGame {
             currentBoard.movePiece(bestMove[0], bestMove[1], bestMove[2], bestMove[3]);
             System.out.println(Arrays.toString(bestMove));*/
 
-            /*or (int i = 0; i < 2; i++) {
+            /*for (int i = 0; i < 2; i++) {
 
                 Piece piece = currentBoard.getPieces(team).get(new Random().nextInt(0, currentBoard.getPieces(team).size()));
                 int[] cord = Arrays.stream(piece.getValidFields()).findAny().orElse(null);
@@ -245,18 +245,18 @@ public class ChessJFrameGame {
                 if (piece != null) {
                     for (int[] validField : piece.getValidFields()) {
                         if (validField[0] == col && validField[1] == row) {
-                            square.setBackground(Color.white);
+                            square.setBackground(Color.lightGray);
                         }
                     }
                 }
 
-                if (leftMousePressed && fromX == -1 && fromY == -1 && currentBoard.getPiece(hovered.x, hovered.y) != null) {
+                if (leftMousePressed && currentBoard.getPiece(hovered.x, hovered.y) != null) {
                     if (currentBoard.getPiece(hovered.x, hovered.y).isWhite() == currentBoard.isWhiteTurn()) {
                         fromX = hovered.x;
                         fromY = hovered.y;
                     }
                 } else if (rightMousePressed) {
-                    if (piece != null && col != fromY && row != fromX && fromX != -1 && currentBoard.getPiece(fromX, fromY).isValidMove(hovered.x, hovered.y)) {
+                    if (piece != null && col != fromX && row != fromY && fromX != -1 && piece.isValidMove(hovered.x, hovered.y)) {
                         System.out.println("Moving " + piece.getName());
                         System.out.println("   [" + fromX + ", " + fromY + " --> " + hovered.x + ", " + hovered.y + "]");
                         currentBoard.movePiece(fromX, fromY, hovered.x, hovered.y);
@@ -276,7 +276,7 @@ public class ChessJFrameGame {
                 }
 
                 if (col == fromX && row == fromY) {
-                    square.setBorder(BorderFactory.createLineBorder(Color.white, 9));
+                    square.setBorder(BorderFactory.createLineBorder(Color.green, 3));
                 }
 
                 boardPanel.add(square);
