@@ -97,8 +97,7 @@ public class ChessTrainer {
     }
 
     private void trainOnGame(@NotNull SingleThreadPgnParser.GameData gameData) {
-        ChessBoard board = new ChessBoard();
-        setupInitialPosition(board);
+        ChessBoard board = new ChessBoard(true);
 
         board.setWhiteTurn(true);
 
@@ -142,31 +141,6 @@ public class ChessTrainer {
         double ratingFactor = 1.0 + (playerRatingDiff / 100.0);
 
         return baseReward * eloFactor * ratingFactor;
-    }
-
-    private void setupInitialPosition(ChessBoard board) {
-        for (int x = 0; x < 8; x++) {
-            board.placePiece(new PawnChessPiece(true, board), x, 1);
-            board.placePiece(new PawnChessPiece(false, board), x, 6);
-        }
-
-        board.placePiece(new RookChessPiece(true, board), 0, 0);
-        board.placePiece(new KnightChessPiece(true, board), 1, 0);
-        board.placePiece(new BishopChessPiece(true, board), 2, 0);
-        board.placePiece(new QueenChessPiece(true, board), 3, 0);
-        board.placePiece(new KingChessPiece(true, board), 4, 0);
-        board.placePiece(new BishopChessPiece(true, board), 5, 0);
-        board.placePiece(new KnightChessPiece(true, board), 6, 0);
-        board.placePiece(new RookChessPiece(true, board), 7, 0);
-
-        board.placePiece(new RookChessPiece(false, board), 0, 7);
-        board.placePiece(new KnightChessPiece(false, board), 1, 7);
-        board.placePiece(new BishopChessPiece(false, board), 2, 7);
-        board.placePiece(new QueenChessPiece(false, board), 3, 7);
-        board.placePiece(new KingChessPiece(false, board), 4, 7);
-        board.placePiece(new BishopChessPiece(false, board), 5, 7);
-        board.placePiece(new KnightChessPiece(false, board), 6, 7);
-        board.placePiece(new RookChessPiece(false, board), 7, 7);
     }
 
     private void startProgressReporting() {

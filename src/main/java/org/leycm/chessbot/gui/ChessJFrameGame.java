@@ -17,7 +17,7 @@ public class ChessJFrameGame {
     private static DefaultListModel<String> listModel = new DefaultListModel<>();
     private static JFrame jFrame = new JFrame("Chess Board [UI]");
     private static JPanel jSidePanel = new JPanel(new BorderLayout());
-    private static ChessBoard currentBoard = new ChessBoard();
+    private static ChessBoard currentBoard = new ChessBoard(false);
     private static HashMap<String, Color> theme = new HashMap<>();
     private static ChessModel model = new ChessModel();
     private static volatile boolean leftMousePressed = false;
@@ -29,7 +29,7 @@ public class ChessJFrameGame {
 
     public static void main(String[] args) throws IOException {
 
-        currentBoard = new ChessBoard();
+        currentBoard = new ChessBoard(false);
 
         theme.put("board.w", new Color(0xFFCE9E));
         theme.put("board.b", new Color(0xD18B47));
@@ -47,7 +47,7 @@ public class ChessJFrameGame {
         setupGlobalMouseTracker(jFrame);
 
         createChessBoardUI();
-        new Timer(1000, e -> {
+        new Timer(25, _ -> {
 
             jFrame.setVisible(true);
 

@@ -3,6 +3,7 @@ package org.leycm.chessbot.chess;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
+import org.leycm.chessbot.chess.pieces.*;
 
 import java.util.*;
 
@@ -14,8 +15,34 @@ public class ChessBoard {
     @Setter @Getter
     private boolean whiteTurn;
 
-    public ChessBoard() {
+    public ChessBoard(boolean autoPlace) {
+        if (autoPlace) autoPlace();
         this.whiteTurn = true;
+    }
+
+    private void autoPlace() {
+        for (int x = 0; x < 8; x++) {
+            placePiece(new PawnChessPiece(false, this), x, 1);
+            placePiece(new PawnChessPiece(true, this), x, 6);
+        }
+
+        placePiece(new RookChessPiece(false, this), 0, 0);
+        placePiece(new KnightChessPiece(false, this), 1, 0);
+        placePiece(new BishopChessPiece(false, this), 2, 0);
+        placePiece(new KingChessPiece(false, this), 3, 0);
+        placePiece(new QueenChessPiece(false, this), 4, 0);
+        placePiece(new BishopChessPiece(false, this), 5, 0);
+        placePiece(new KnightChessPiece(false, this), 6, 0);
+        placePiece(new RookChessPiece(false, this), 7, 0);
+
+        placePiece(new RookChessPiece(true, this), 0, 7);
+        placePiece(new KnightChessPiece(true, this), 1, 7);
+        placePiece(new BishopChessPiece(true, this), 2, 7);
+        placePiece(new KingChessPiece(true, this), 3, 7);
+        placePiece(new QueenChessPiece(true, this), 4, 7);
+        placePiece(new BishopChessPiece(true, this), 5, 7);
+        placePiece(new KnightChessPiece(true, this), 6, 7);
+        placePiece(new RookChessPiece(true, this), 7, 7);
     }
 
     public void placePiece(ChessPiece piece, int x, int y) {
@@ -37,7 +64,12 @@ public class ChessBoard {
         ChessPiece piece = board[move.getFromY()][move.getFromX()];
         if (piece == null) return;
 
-        if (!piece.isValidMove(move.getToX(), move.getToY())) return;
+        if (!piece.isValidMove(move.getToX(), move.getToY())) {
+            System.out.println(piece.getName() + " can move to " + Arrays.deepToString(piece.getValidFields()) + " not to [" + move.getToX() + ", " + move.getToY() + "]");
+            return;
+        }
+
+        System.out.println(piece.getName() + " can move to " + Arrays.deepToString(piece.getValidFields()));
 
 
         board[move.getToY()][move.getToX()] = piece;

@@ -60,4 +60,10 @@ public class KnightChessPiece extends ChessPiece {
 
         return possibleFields;
     }
+
+    @Override
+    public char getChar() {
+        return 'n';
+    }
+
 }

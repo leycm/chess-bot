@@ -39,21 +39,11 @@ public abstract class ChessPiece {
     }
 
     public char getColorChar() {
-        char letter = name.charAt(0);
-        return isWhite ? Character.toLowerCase(letter) : Character.toUpperCase(letter);
+        return isWhite ? Character.toLowerCase(getChar()) : Character.toUpperCase(getChar());
     }
 
     public char getChar() {
-        
-        return switch (name.toLowerCase()) {
-            case "knight" -> 'N';
-            case "king" -> 'K';
-            case "bishop" -> 'B';
-            case "queen" -> 'Q';
-            case "rook" -> 'R';
-            case "pawn" -> 'P';
-            default -> Character.toUpperCase(name.charAt(0));
-        };
+        return Character.toUpperCase(name.charAt(0));
     }
 
     protected boolean isValidCoordinate(int x, int y) {
