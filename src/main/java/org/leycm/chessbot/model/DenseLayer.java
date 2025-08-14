@@ -1,5 +1,7 @@
 package org.leycm.chessbot.model;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -27,7 +29,7 @@ public class DenseLayer {
         }
     }
 
-    public double[] forward(double[] input) {
+    public double[] forward(double @NotNull [] input) {
         this.lastInput = input.clone();
         double[] output = new double[weights.length];
 

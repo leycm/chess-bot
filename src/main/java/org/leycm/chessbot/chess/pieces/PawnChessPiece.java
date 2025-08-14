@@ -37,7 +37,7 @@ public class PawnChessPiece extends ChessPiece {
             }
         }
 
-        for (int deltaX : new int[]{-1, 1}) {
+        for (int deltaX : new int[]{1, -1}) {
             int captureX = currentX + deltaX;
             int captureY = currentY + direction;
 

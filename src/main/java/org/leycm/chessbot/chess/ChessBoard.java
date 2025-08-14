@@ -25,7 +25,7 @@ public class ChessBoard {
     }
 
     public void movePiece(int fromX, int fromY, int toX, int toY) {
-        movePiece(new ChessMove(fromX, fromY, toX, toY, this, ""));
+        movePiece(new ChessMove(fromX, fromY, toX, toY, this));
     }
 
     public void movePiece(@NotNull ChessMove move) {
@@ -34,14 +34,14 @@ public class ChessBoard {
             return;
         }
 
-        ChessPiece piece = board[move.getFromX()][move.getFromY()];
+        ChessPiece piece = board[move.getFromY()][move.getFromX()];
         if (piece == null) return;
 
         if (!piece.isValidMove(move.getToX(), move.getToY())) return;
 
 
-        board[move.getToX()][move.getToY()] = piece;
-        board[move.getFromX()][move.getFromY()] = null;
+        board[move.getToY()][move.getToX()] = piece;
+        board[move.getFromY()][move.getFromX()] = null;
 
         moveHistory.add(move);
 
@@ -64,7 +64,7 @@ public class ChessBoard {
                 }
             }
         }
-        return -1; // not found
+        return -1; 
     }
 
     public int getYForPiece(UUID uuid) {
@@ -76,7 +76,7 @@ public class ChessBoard {
                 }
             }
         }
-        return -1; // not found
+        return -1; 
     }
 
     public boolean isValidCoord(int x, int y) {
@@ -153,7 +153,7 @@ public class ChessBoard {
         StringBuilder sb = new StringBuilder();
 
         for (int y = 0; y < 8; y++) {
-            char rowLabel = (char) ('h' - y);
+            char rowLabel = (char) ('1' + (7 - y));
             sb.append(rowLabel).append("  ");
 
             for (int x = 0; x < 8; x++) {
@@ -164,8 +164,9 @@ public class ChessBoard {
         }
 
         sb.append("   ");
-        for (int x = 1; x <= 8; x++) {
-            sb.append(x).append("  ");
+        for (int x = 0; x < 8; x++) {
+            char colLabel = (char) ('a' + x);
+            sb.append(colLabel).append("  ");
         }
         sb.append("\n");
 

@@ -44,7 +44,16 @@ public abstract class ChessPiece {
     }
 
     public char getChar() {
-        return Character.toUpperCase(name.charAt(0));
+        
+        return switch (name.toLowerCase()) {
+            case "knight" -> 'N';
+            case "king" -> 'K';
+            case "bishop" -> 'B';
+            case "queen" -> 'Q';
+            case "rook" -> 'R';
+            case "pawn" -> 'P';
+            default -> Character.toUpperCase(name.charAt(0));
+        };
     }
 
     protected boolean isValidCoordinate(int x, int y) {

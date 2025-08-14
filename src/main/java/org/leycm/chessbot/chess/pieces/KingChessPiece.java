@@ -10,7 +10,7 @@ import java.util.List;
 public class KingChessPiece extends ChessPiece {
 
     public KingChessPiece(boolean isWhite, ChessBoard board) {
-        super(isWhite, board, 1000, "king_chess_piece", "King", '♚'); // High level for king
+        super(isWhite, board, 1000, "king_chess_piece", "King", '♚'); 
     }
 
     @Override

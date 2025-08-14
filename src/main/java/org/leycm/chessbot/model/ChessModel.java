@@ -3,6 +3,7 @@ package org.leycm.chessbot.model;
 import lombok.Getter;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.leycm.chessbot.chess.ChessMove;
 
 @Getter
 public class ChessModel {
@@ -37,7 +38,7 @@ public class ChessModel {
         return current;
     }
 
-    public void train(int @NotNull [] boardState, int[] move, double reward) {
+    public void train(int @NotNull [] boardState, ChessMove move, double reward) {
         double[] input = new double[inputSize];
         for (int i = 0; i < boardState.length; i++) {
             input[i] = boardState[i] / 10.0;
@@ -67,9 +68,9 @@ public class ChessModel {
     }
 
     @Contract(pure = true)
-    private int moveToIndex(int @NotNull [] move) {
-        if (move.length < 4) return -1;
-        return move[0] * 512 + move[1] * 64 + move[2] * 8 + move[3];
+    private int moveToIndex(ChessMove move) {
+        if (move == null || move.isValid()) return -1;
+        return move.getFromX() * 512 + move.getFromX() * 64 + move.getToX() * 8 + move.getToY();
     }
 
 }

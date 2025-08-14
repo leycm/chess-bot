@@ -120,7 +120,7 @@ public class ChessJFrameGame {
 
         HashMap<Point, ChessPiece> pieces = new HashMap<>();
 
-        // White
+        
         pieces.put(new Point(0, 7), new RookChessPiece(true, board));
         pieces.put(new Point(1, 7), new KnightChessPiece(true, board));
         pieces.put(new Point(2, 7), new BishopChessPiece(true, board));
@@ -134,7 +134,7 @@ public class ChessJFrameGame {
             pieces.put(new Point(y, 6), new PawnChessPiece(true, board));
         }
 
-        // Black
+        
         pieces.put(new Point(0, 0), new RookChessPiece(false, board));
         pieces.put(new Point(1, 0), new KnightChessPiece(false, board));
         pieces.put(new Point(2, 0), new BishopChessPiece(false, board));
@@ -261,20 +261,20 @@ public class ChessJFrameGame {
                         currentBoard.movePiece(fromX, fromY, hovered.x, hovered.y);
                     } else if (fromX != -1 && fromY != -1){
                         System.out.println("Can't go there");
-//                        System.out.println(piece.getX());
-//                        System.out.println(piece.getY());
-//                        System.out.println(col);
-//                        System.out.println(row);
-//                        System.out.println(hovered.x);
-//                        System.out.println(hovered.y);
+
+
+
+
+
+
                     }
                     fromX = -1;
                     fromY = -1;
                 }
 
-//                if (System.out) {
-//                    System.out.println(hovered.x + " " + hovered.y);
-//                }
+
+
+
 
                 if (hovered != null && hovered.x == col && hovered.y == row) {
                     if (fromX != -1 && fromY != -1) {

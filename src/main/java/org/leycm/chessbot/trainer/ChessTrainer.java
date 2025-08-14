@@ -1,12 +1,12 @@
 package org.leycm.chessbot.trainer;
 
+import lombok.Data;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.leycm.chessbot.chess.*;
 import org.leycm.chessbot.chess.pieces.*;
 import org.leycm.chessbot.model.ChessModel;
 import org.leycm.chessbot.model.ModelLoader;
-import org.leycm.chessbot.model.MoveConverter;
 import org.leycm.chessbot.trainer.parser.MultiThreadPgnParser;
 import org.leycm.chessbot.trainer.parser.SingleThreadPgnParser;
 
@@ -23,7 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-@Getter
+@Data
 public class ChessTrainer {
     private ChessModel model;
 
@@ -102,43 +102,28 @@ public class ChessTrainer {
 
         board.setWhiteTurn(true);
 
-        List<String> movesStringVisuals = new ArrayList<>();
 
-        movesStringVisuals.add("-------------------------------------------\n");
-        movesStringVisuals.add(" New game \""+ gameData.result() + "\" link: " + gameData.link() + "  \n");
-        movesStringVisuals.add("-------------------------------------------\n");
 
         for (String moveStr : gameData.moves()) {
-            movesStringVisuals.add("========= New Move for " + (board.isWhiteTurn() ? "White" : "Black") + " ====\n");
 
             int[] boardState = board.getGameStateArray();
-            int[] move = MoveConverter.moveStringToArray(moveStr, board);
+            ChessMove move = ChessMove.algebraic(moveStr, board);
 
-            if (move[0] == -1) {
-                movesStringVisuals.add("Fail to parse move \"" + moveStr + "\"\n");
+            if (move.getFromX() == -1) {
                 board.setWhiteTurn(!board.isWhiteTurn());
-
-                movesStringVisuals.add("========= Move is done =========\n");
                 continue;
             }
-            movesStringVisuals.add("Parsed move from \"" + moveStr + "\" to \"" + Arrays.toString(move) + "\"\n");
 
             double reward = calculateReward(gameData, board.isWhiteTurn());
 
-            if (board.getPiece(move[0], move[1]) != null) {
-                board.movePiece(move[0], move[1], move[2], move[3]);
+            if (board.getPiece(move.getFromX(), move.getFromY()) != null) {
+                board.movePiece(move.getFromX(), move.getFromY(), move.getToX(), move.getToY());
                 model.train(boardState, move, reward);
                 samplesProcessed.incrementAndGet();
-                movesStringVisuals.add("Trained Sample for " + (board.isWhiteTurn() ? "White" : "Black") + "\n");
-                movesStringVisuals.add(board.toVisualString());
             }
 
             board.setWhiteTurn(!board.isWhiteTurn());
-
-            movesStringVisuals.add("========= Move is done =========\n");
         }
-
-        movesStringVisuals.forEach(System.out::printf);
     }
 
     private double calculateReward(@NotNull SingleThreadPgnParser.GameData gameData, boolean whiteToMove) {
@@ -161,27 +146,27 @@ public class ChessTrainer {
 
     private void setupInitialPosition(ChessBoard board) {
         for (int x = 0; x < 8; x++) {
-            board.placePiece(new PawnChessPiece(true, board), x, 6);
-            board.placePiece(new PawnChessPiece(false, board), x, 1);
+            board.placePiece(new PawnChessPiece(true, board), x, 1);
+            board.placePiece(new PawnChessPiece(false, board), x, 6);
         }
 
-        board.placePiece(new RookChessPiece(true, board), 0, 7);
-        board.placePiece(new RookChessPiece(true, board), 7, 7);
-        board.placePiece(new KnightChessPiece(true, board), 1, 7);
-        board.placePiece(new KnightChessPiece(true, board), 6, 7);
-        board.placePiece(new BishopChessPiece(true, board), 2, 7);
-        board.placePiece(new BishopChessPiece(true, board), 5, 7);
-        board.placePiece(new QueenChessPiece(true, board), 3, 7);
-        board.placePiece(new KingChessPiece(true, board), 4, 7);
+        board.placePiece(new RookChessPiece(true, board), 0, 0);
+        board.placePiece(new KnightChessPiece(true, board), 1, 0);
+        board.placePiece(new BishopChessPiece(true, board), 2, 0);
+        board.placePiece(new QueenChessPiece(true, board), 3, 0);
+        board.placePiece(new KingChessPiece(true, board), 4, 0);
+        board.placePiece(new BishopChessPiece(true, board), 5, 0);
+        board.placePiece(new KnightChessPiece(true, board), 6, 0);
+        board.placePiece(new RookChessPiece(true, board), 7, 0);
 
-        board.placePiece(new RookChessPiece(false, board), 0, 0);
-        board.placePiece(new RookChessPiece(false, board), 7, 0);
-        board.placePiece(new KnightChessPiece(false, board), 1, 0);
-        board.placePiece(new KnightChessPiece(false, board), 6, 0);
-        board.placePiece(new BishopChessPiece(false, board), 2, 0);
-        board.placePiece(new BishopChessPiece(false, board), 5, 0);
-        board.placePiece(new QueenChessPiece(false, board), 3, 0);
-        board.placePiece(new KingChessPiece(false, board), 4, 0);
+        board.placePiece(new RookChessPiece(false, board), 0, 7);
+        board.placePiece(new KnightChessPiece(false, board), 1, 7);
+        board.placePiece(new BishopChessPiece(false, board), 2, 7);
+        board.placePiece(new QueenChessPiece(false, board), 3, 7);
+        board.placePiece(new KingChessPiece(false, board), 4, 7);
+        board.placePiece(new BishopChessPiece(false, board), 5, 7);
+        board.placePiece(new KnightChessPiece(false, board), 6, 7);
+        board.placePiece(new RookChessPiece(false, board), 7, 7);
     }
 
     private void startProgressReporting() {
@@ -227,7 +212,7 @@ public class ChessTrainer {
         boolean multithreading = Arrays.stream(args).anyMatch(arg -> arg.equalsIgnoreCase("--multithreading"));
 
         ChessTrainer trainer = new ChessTrainer("1.1.5-R0-TEST", "Try 3 to test a bug with MoveConverter");
-        // versions in models.info
+        
 
         trainer.trainFromPgn(filename, false);
     }

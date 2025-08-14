@@ -120,12 +120,12 @@ public class MonitoringDashboard extends JFrame {
 
     private void updateSystemData(int updateCount) {
         int[] simulatedValues = new int[6];
-        simulatedValues[0] = (int)(Math.random() * 100); // CPU %
-        simulatedValues[1] = (int)(2000 + Math.random() * 2000); // Memory MB
-        simulatedValues[2] = (int)(Math.random() * 1000); // Disk KB/s
-        simulatedValues[3] = (int)(Math.random() * 500); // Network KB/s
-        simulatedValues[4] = (int)(30 + Math.random() * 40); // Temperature °C
-        simulatedValues[5] = (int)(50 + Math.random() * 200); // Power W
+        simulatedValues[0] = (int)(Math.random() * 100); 
+        simulatedValues[1] = (int)(2000 + Math.random() * 2000); 
+        simulatedValues[2] = (int)(Math.random() * 1000); 
+        simulatedValues[3] = (int)(Math.random() * 500); 
+        simulatedValues[4] = (int)(30 + Math.random() * 40); 
+        simulatedValues[5] = (int)(50 + Math.random() * 200); 
 
         updateSystemData(simulatedValues);
     }
@@ -195,7 +195,7 @@ public class MonitoringDashboard extends JFrame {
 
             int minVal = data.stream().min(Integer::compare).orElse(0);
             int maxVal = data.stream().max(Integer::compare).orElse(100);
-            if (minVal == maxVal) maxVal = minVal + 1; // Avoid division by zero
+            if (minVal == maxVal) maxVal = minVal + 1; 
 
             g2d.setColor(Color.LIGHT_GRAY);
             for (int i = 0; i <= 10; i++) {

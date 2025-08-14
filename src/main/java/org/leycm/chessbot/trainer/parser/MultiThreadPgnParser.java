@@ -14,7 +14,7 @@ public class MultiThreadPgnParser implements ChessPgnParser {
     private final Pattern MOVE_PATTERN = Pattern.compile("(\\d+\\.+)?\\s*([NBRQK]?[a-h]?[1-8]?x?[a-h][1-8](?:=[NBRQ])?[+#]?)");
 
     private final int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
-    private final int QUEUE_SIZE = 5000; // Buffer size for game queue
+    private final int QUEUE_SIZE = 5000; 
 
     @Override
     public void processPgnFile(String filename, GameProcessor processor) throws IOException {
