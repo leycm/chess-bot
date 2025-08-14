@@ -25,7 +25,7 @@ public class ChessBoard {
     }
 
     public void movePiece(int fromX, int fromY, int toX, int toY) {
-        movePiece(new ChessMove(fromX, fromY, toX, toY, this));
+        movePiece(new ChessMove(fromX, fromY, toX, toY, this, ""));
     }
 
     public void movePiece(@NotNull ChessMove move) {

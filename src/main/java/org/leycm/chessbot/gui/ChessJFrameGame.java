@@ -96,18 +96,18 @@ public class ChessJFrameGame {
             listModel.removeAllElements();
             currentBoard.getMoveHistory().forEach(move -> {
 
-                String movedColor = move.movedPiece().isWhite() ? "White" : "Black";
+                String movedColor = move.getMovedPiece().isWhite() ? "White" : "Black";
 
                 String capturedStringEnd = "";
-                if (move.capturedPiece() != null) {
+                if (move.getCapturedPiece() != null) {
 
-                    String capturedColor = move.capturedPiece().isWhite() ? "White" : "Black";
-                    capturedStringEnd = " " + move.capturedPiece().getName() + " [" + capturedColor + "] ";
+                    String capturedColor = move.getCapturedPiece().isWhite() ? "White" : "Black";
+                    capturedStringEnd = " " + move.getCapturedPiece().getName() + " [" + capturedColor + "] ";
                 }
 
-                String moveS = move.movedPiece().getName() + " [" + movedColor + "] " +
-                        move.fromX() + ", " + move.fromY() + " ---> " +
-                        move.toX() + ", " + move.toY() +
+                String moveS = move.getMovedPiece().getName() + " [" + movedColor + "] " +
+                        move.getFromX() + ", " + move.getFromY() + " ---> " +
+                        move.getToX() + ", " + move.getToY() +
                         capturedStringEnd;
 
                 addStringToHistory(moveS);
