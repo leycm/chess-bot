@@ -47,7 +47,7 @@ public class ChessJFrameGame {
         setupGlobalMouseTracker(jFrame);
 
         createChessBoardUI();
-        new Timer(25, e -> {
+        new Timer(1000, e -> {
 
             jFrame.setVisible(true);
 
@@ -261,12 +261,6 @@ public class ChessJFrameGame {
                         currentBoard.movePiece(fromX, fromY, hovered.x, hovered.y);
                     } else if (fromX != -1 && fromY != -1){
                         System.out.println("Can't go there");
-
-
-
-
-
-
                     }
                     fromX = -1;
                     fromY = -1;
@@ -289,6 +283,14 @@ public class ChessJFrameGame {
                 if (col == fromX && row == fromY) {
                     square.setBorder(BorderFactory.createLineBorder(Color.green, 3));
                 }
+
+//                if (!currentBoard.isWhiteTurn()) {
+//                    try {
+//                        ModelLoader.makeBestMove(currentBoard);
+//                    } catch (Exception e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                }
 
                 boardPanel.add(square);
             }
