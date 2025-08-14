@@ -185,29 +185,25 @@ public class ChessJFrameGame {
 
     private static Point getHoveredSquareCoords() {
         try {
-            // Mausposition in Screen-Koordinaten
             Point mouseScreen = MouseInfo.getPointerInfo().getLocation();
-            // Position des Brett-Panels in Screen-Koordinaten
+
             Point boardScreen = boardPanel.getLocationOnScreen();
 
-            // Mausposition relativ zum Brett
             int relX = mouseScreen.x - boardScreen.x;
             int relY = mouseScreen.y - boardScreen.y;
 
             int squareSize = boardPanel.getWidth() / 8;
 
-            // Maus außerhalb? → null
             if (relX < 0 || relY < 0 || relX >= boardPanel.getWidth() || relY >= boardPanel.getHeight()) {
                 return null;
             }
 
-            // Spalte & Reihe bestimmen
             int col = relX / squareSize;
             int row = relY / squareSize;
 
             return new Point(col, row);
         } catch (IllegalComponentStateException e) {
-            return null; // falls UI noch nicht sichtbar ist
+            return null;
         }
     }
 
@@ -246,6 +242,9 @@ public class ChessJFrameGame {
                     for (int[] validField : piece.getValidFields()) {
                         if (validField[0] == col && validField[1] == row) {
                             square.setBackground(Color.lightGray);
+                            if (currentBoard.getPiece(col, row) != null) {
+                                square.setBackground(Color.darkGray);
+                            }
                         }
                     }
                 }
@@ -256,14 +255,26 @@ public class ChessJFrameGame {
                         fromY = hovered.y;
                     }
                 } else if (rightMousePressed) {
-                    if (piece != null && col != fromX && row != fromY && fromX != -1 && piece.isValidMove(hovered.x, hovered.y)) {
+                    if (piece != null && fromX != -1 && piece.isValidMove(hovered.x, hovered.y)) {
                         System.out.println("Moving " + piece.getName());
                         System.out.println("   [" + fromX + ", " + fromY + " --> " + hovered.x + ", " + hovered.y + "]");
                         currentBoard.movePiece(fromX, fromY, hovered.x, hovered.y);
+                    } else if (fromX != -1 && fromY != -1){
+                        System.out.println("Can't go there");
+//                        System.out.println(piece.getX());
+//                        System.out.println(piece.getY());
+//                        System.out.println(col);
+//                        System.out.println(row);
+//                        System.out.println(hovered.x);
+//                        System.out.println(hovered.y);
                     }
                     fromX = -1;
                     fromY = -1;
                 }
+
+//                if (System.out) {
+//                    System.out.println(hovered.x + " " + hovered.y);
+//                }
 
                 if (hovered != null && hovered.x == col && hovered.y == row) {
                     if (fromX != -1 && fromY != -1) {
