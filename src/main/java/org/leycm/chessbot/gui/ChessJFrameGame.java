@@ -24,6 +24,8 @@ public class ChessJFrameGame {
     private static volatile boolean rightMousePressed = false;
     private static int fromX = -1;
     private static int fromY = -1;
+    private static boolean blackAI = true;
+    private static boolean whiteAI = false;
 
     private static JPanel boardPanel;
 
@@ -43,7 +45,7 @@ public class ChessJFrameGame {
         setupGlobalMouseTracker(jFrame);
 
         // Ai Move
-        new Timer(1000, actionEvent -> {
+        new Timer(501, actionEvent -> {
 
             boolean team = true;
 
@@ -74,7 +76,13 @@ public class ChessJFrameGame {
                 team = !team;
             }*/
 
-            if (!currentBoard.isWhiteTurn()) {
+            if (!currentBoard.isWhiteTurn() && blackAI) {
+                try {
+                    ModelLoader.makeBestMove(currentBoard);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            } else if (whiteAI) {
                 try {
                     ModelLoader.makeBestMove(currentBoard);
                 } catch (Exception e) {
