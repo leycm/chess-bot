@@ -2,13 +2,13 @@ package org.leycm.chessbot.chess.pieces;
 
 import org.jetbrains.annotations.NotNull;
 import org.leycm.chessbot.chess.ChessBoard;
-import org.leycm.chessbot.chess.Piece;
+import org.leycm.chessbot.chess.ChessPiece;
 import org.leycm.chessbot.util.ArrayUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class RookChessPiece extends Piece {
+public class RookChessPiece extends ChessPiece {
 
     public RookChessPiece(boolean isWhite, ChessBoard board) {
         super(isWhite, board, 5, "rook_chess_piece", "Rook", '♜');

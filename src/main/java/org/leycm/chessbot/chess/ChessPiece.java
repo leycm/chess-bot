@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
-public abstract class Piece {
+public abstract class ChessPiece {
 
     protected final boolean isWhite;
     public boolean hasMovedYet = false;
@@ -16,7 +16,7 @@ public abstract class Piece {
     protected final String name;
     protected final char ico;
 
-    public Piece(boolean isWhite, ChessBoard board, int level, String id, String name, char ico) {
+    public ChessPiece(boolean isWhite, ChessBoard board, int level, String id, String name, char ico) {
         this.isWhite = isWhite;
         this.board = board;
         this.level = level;
@@ -56,7 +56,7 @@ public abstract class Piece {
     }
 
     protected boolean isEnemy(int x, int y) {
-        Piece piece = board.getPiece(x, y);
+        ChessPiece piece = board.getPiece(x, y);
         return piece != null && piece.isWhite() != this.isWhite();
     }
 

@@ -8,7 +8,7 @@ import java.util.*;
 
 public class ChessBoard {
 
-    private final Piece[][] board = new Piece[8][8];
+    private final ChessPiece[][] board = new ChessPiece[8][8];
     private final List<ChessMove> moveHistory = new ArrayList<>();
 
     @Setter @Getter
@@ -18,7 +18,7 @@ public class ChessBoard {
         this.whiteTurn = true;
     }
 
-    public void placePiece(Piece piece, int x, int y) {
+    public void placePiece(ChessPiece piece, int x, int y) {
         if (isValidCoord(x, y)) {
             board[y][x] = piece;
         }
@@ -34,7 +34,7 @@ public class ChessBoard {
             return;
         }
 
-        Piece piece = board[move.getFromX()][move.getFromY()];
+        ChessPiece piece = board[move.getFromX()][move.getFromY()];
         if (piece == null) return;
 
         if (!piece.isValidMove(move.getToX(), move.getToY())) return;
@@ -50,7 +50,7 @@ public class ChessBoard {
         whiteTurn = !whiteTurn;
     }
 
-    public Piece getPiece(int x, int y) {
+    public ChessPiece getPiece(int x, int y) {
         if (!isValidCoord(x, y)) return null;
         return board[y][x];
     }
@@ -58,25 +58,25 @@ public class ChessBoard {
     public int getXForPiece(UUID uuid) {
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
-                Piece piece = board[y][x];
+                ChessPiece piece = board[y][x];
                 if (piece != null && piece.uuid.equals(uuid)) {
                     return x;
                 }
             }
         }
-        return -1; // if piece not found
+        return -1; // not found
     }
 
     public int getYForPiece(UUID uuid) {
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
-                Piece piece = board[y][x];
+                ChessPiece piece = board[y][x];
                 if (piece != null && piece.uuid.equals(uuid)) {
                     return y;
                 }
             }
         }
-        return -1; // if piece not found
+        return -1; // not found
     }
 
     public boolean isValidCoord(int x, int y) {
@@ -87,7 +87,7 @@ public class ChessBoard {
         return new ArrayList<>(moveHistory);
     }
 
-    public Piece[][] getPieceBoard() {
+    public ChessPiece[][] getPieceBoard() {
         return board;
     }
 
@@ -95,7 +95,7 @@ public class ChessBoard {
         int[][] result = new int[8][8];
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
-                Piece piece = board[y][x];
+                ChessPiece piece = board[y][x];
                 result[y][x] = piece == null ? 0 : piece.getLevel() * (piece.isWhite() ? 1 : -1);
             }
         }
@@ -112,10 +112,10 @@ public class ChessBoard {
         return result;
     }
 
-    public Piece[] getPieceArray() {
+    public ChessPiece[] getPieceArray() {
         return Arrays.stream(board)
                 .flatMap(Arrays::stream)
-                .toArray(Piece[]::new);
+                .toArray(ChessPiece[]::new);
     }
 
     public int[] getLevelArray() {
@@ -136,11 +136,11 @@ public class ChessBoard {
             return result;
     }
 
-    public List<Piece> getPieces(boolean white) {
-        List<Piece> pieces = new ArrayList<>();
+    public List<ChessPiece> getPieces(boolean white) {
+        List<ChessPiece> pieces = new ArrayList<>();
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
-                Piece piece = board[y][x];
+                ChessPiece piece = board[y][x];
                 if (piece != null && piece.isWhite() == white) {
                     pieces.add(piece);
                 }
@@ -157,7 +157,7 @@ public class ChessBoard {
             sb.append(rowLabel).append("  ");
 
             for (int x = 0; x < 8; x++) {
-                Piece piece = board[y][x];
+                ChessPiece piece = board[y][x];
                 sb.append(piece != null ? piece.getColorChar() : '.').append("  ");
             }
             sb.append("\n");

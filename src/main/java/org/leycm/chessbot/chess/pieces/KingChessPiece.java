@@ -1,13 +1,13 @@
 package org.leycm.chessbot.chess.pieces;
 
 import org.leycm.chessbot.chess.ChessBoard;
-import org.leycm.chessbot.chess.Piece;
+import org.leycm.chessbot.chess.ChessPiece;
 import org.leycm.chessbot.util.ArrayUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class KingChessPiece extends Piece {
+public class KingChessPiece extends ChessPiece {
 
     public KingChessPiece(boolean isWhite, ChessBoard board) {
         super(isWhite, board, 1000, "king_chess_piece", "King", '♚'); // High level for king

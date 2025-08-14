@@ -11,8 +11,8 @@ import java.util.List;
 
 @Getter
 public class ChessMove {
-    private final Piece movedPiece;
-    private final Piece capturedPiece;
+    private final ChessPiece movedPiece;
+    private final ChessPiece capturedPiece;
     private final int fromX, fromY;
     private final int toX, toY;
     private final boolean isPromotion;
@@ -82,15 +82,15 @@ public class ChessMove {
             return disambiguatedCapture(algebraic.toUpperCase(), board.isWhiteTurn(), board);
         }
 
-        return new ChessMove(-1, -1, -1, -1, board);
+        return new ChessMove(-1, -1, -1, -1, board, algebraic);
     }
 
-    public ChessMove(int fromX, int fromY, int toX, int toY, @NotNull ChessBoard board) {
-        this(fromX, fromY, toX, toY, board, false, '\0', false, false);
+    public ChessMove(int fromX, int fromY, int toX, int toY, @NotNull ChessBoard board, String algebraic) {
+        this(fromX, fromY, toX, toY, board, false, '\0', false, false, algebraic);
     }
 
     public ChessMove(int fromX, int fromY, int toX, int toY, @NotNull ChessBoard board,
-                     boolean isPromotion, char promotionPiece, boolean isCastling, boolean isEnPassant) {
+                     boolean isPromotion, char promotionPiece, boolean isCastling, boolean isEnPassant, String algebraic) {
         this.movedPiece = fromX != -1 ? board.getPiece(fromX, fromY) : null;
         this.capturedPiece = toX != -1 ? board.getPiece(toX, toY) : null;
 
@@ -108,7 +108,17 @@ public class ChessMove {
     }
 
     public String asCoordinate() {
-        return (char)(fromX + 'A') + String.valueOf(8 - fromY) + "-" + (char)(toX + 'A') + String.valueOf(8 - toY);
+        return (char)(fromX + 'A') +
+                (8 - fromY) + "-" +
+                (char)(toX + 'A') +
+                (8 - toY);
+    }
+
+    public String asFigurineAlgebraic() {
+        return (char)(fromX + 'A') +
+                (8 - fromY) + "-" +
+                (char)(toX + 'A') +
+                (8 - toY);
     }
 
     @Contract("_, _, _ -> new")
@@ -124,7 +134,7 @@ public class ChessMove {
             fromY = whiteTurn ? 6 : 1;
         }
 
-        return new ChessMove(fromX, fromY, toX, toY, board);
+        return new ChessMove(fromX, fromY, toX, toY, board, algebraic);
     }
 
     @Contract("_, _, _ -> new")
@@ -138,7 +148,7 @@ public class ChessMove {
                 board.getPiece(toX, fromY) != null &&
                 board.getPiece(toX, fromY) instanceof PawnChessPiece;
 
-        return new ChessMove(fromX, fromY, toX, toY, board, false, '\0', false, isEnPassant);
+        return new ChessMove(fromX, fromY, toX, toY, board, false, '\0', false, isEnPassant, algebraic);
     }
 
     @Contract("_, _, _ -> new")
@@ -162,7 +172,7 @@ public class ChessMove {
         }
         fromY = toY + (whiteTurn ? 1 : -1);
 
-        return new ChessMove(fromX, fromY, toX, toY, board, true, promotionPiece, false, false);
+        return new ChessMove(fromX, fromY, toX, toY, board, true, promotionPiece, false, false, algebraic);
     }
 
     @Contract("_, _, _ -> new")
@@ -171,11 +181,11 @@ public class ChessMove {
         int toX = algebraic.charAt(1) - 'A';
         int toY = 8 - (algebraic.charAt(2) - '0');
 
-        Piece movedPiece = findPieceCanMoveTo(pieceChar, toX, toY, whiteTurn, board, null);
+        ChessPiece movedPiece = findPieceCanMoveTo(pieceChar, toX, toY, whiteTurn, board, null);
 
-        if (movedPiece == null) return new ChessMove(-1, -1, -1, -1, board);
+        if (movedPiece == null) return new ChessMove(-1, -1, -1, -1, board, algebraic);
 
-        return new ChessMove(movedPiece.getX(), movedPiece.getY(), toX, toY, board);
+        return new ChessMove(movedPiece.getX(), movedPiece.getY(), toX, toY, board, algebraic);
     }
 
     @Contract("_, _, _ -> new")
@@ -184,11 +194,11 @@ public class ChessMove {
         int toX = algebraic.charAt(2) - 'A';
         int toY = 8 - (algebraic.charAt(3) - '0');
 
-        Piece movedPiece = findPieceCanMoveTo(pieceChar, toX, toY, whiteTurn, board, null);
+        ChessPiece movedPiece = findPieceCanMoveTo(pieceChar, toX, toY, whiteTurn, board, null);
 
-        if (movedPiece == null) return new ChessMove(-1, -1, -1, -1, board);
+        if (movedPiece == null) return new ChessMove(-1, -1, -1, -1, board, algebraic);
 
-        return new ChessMove(movedPiece.getX(), movedPiece.getY(), toX, toY, board);
+        return new ChessMove(movedPiece.getX(), movedPiece.getY(), toX, toY, board, algebraic);
     }
 
     @Contract("_, _, _ -> new")
@@ -198,11 +208,11 @@ public class ChessMove {
         int toX = algebraic.charAt(2) - 'A';
         int toY = 8 - (algebraic.charAt(3) - '0');
 
-        Piece movedPiece = findPieceCanMoveTo(pieceChar, toX, toY, whiteTurn, board, disambiguator);
+        ChessPiece movedPiece = findPieceCanMoveTo(pieceChar, toX, toY, whiteTurn, board, disambiguator);
 
-        if (movedPiece == null) return new ChessMove(-1, -1, -1, -1, board);
+        if (movedPiece == null) return new ChessMove(-1, -1, -1, -1, board, algebraic);
 
-        return new ChessMove(movedPiece.getX(), movedPiece.getY(), toX, toY, board);
+        return new ChessMove(movedPiece.getX(), movedPiece.getY(), toX, toY, board, algebraic);
     }
 
     @Contract("_, _, _ -> new")
@@ -213,11 +223,11 @@ public class ChessMove {
         int toX = algebraic.charAt(xIndex + 1) - 'A';
         int toY = 8 - (algebraic.charAt(xIndex + 2) - '0');
 
-        Piece movedPiece = findPieceCanMoveTo(pieceChar, toX, toY, whiteTurn, board, disambiguator);
+        ChessPiece movedPiece = findPieceCanMoveTo(pieceChar, toX, toY, whiteTurn, board, disambiguator);
 
-        if (movedPiece == null) return new ChessMove(-1, -1, -1, -1, board);
+        if (movedPiece == null) return new ChessMove(-1, -1, -1, -1, board, algebraic);
 
-        return new ChessMove(movedPiece.getX(), movedPiece.getY(), toX, toY, board);
+        return new ChessMove(movedPiece.getX(), movedPiece.getY(), toX, toY, board, algebraic);
     }
 
     @Contract("_, _, _ -> new")
@@ -226,16 +236,16 @@ public class ChessMove {
         int fromX = 4;
         int toX = kingside ? 6 : 2;
 
-        return new ChessMove(fromX, rank, toX, rank, board, false, '\0', true, false);
+        return new ChessMove(fromX, rank, toX, rank, board, false, '\0', true, false, kingside ? "0-0" : "0-0-0");
     }
 
-    private static @Nullable Piece findPieceCanMoveTo(char pieceChar, int toX, int toY, boolean whiteTurn,
-                                                      @NotNull ChessBoard board, Character disambiguator) {
-        List<Piece> pieces = board.getPieces(whiteTurn).stream()
+    private static @Nullable ChessPiece findPieceCanMoveTo(char pieceChar, int toX, int toY, boolean whiteTurn,
+                                                           @NotNull ChessBoard board, Character disambiguator) {
+        List<ChessPiece> pieces = board.getPieces(whiteTurn).stream()
                 .filter(piece -> piece.getChar() == pieceChar)
                 .toList();
 
-        List<Piece> validPieces = pieces.stream()
+        List<ChessPiece> validPieces = pieces.stream()
                 .filter(piece -> Arrays.stream(piece.getValidFields())
                         .anyMatch(field -> field[0] == toX && field[1] == toY))
                 .toList();

@@ -1,7 +1,7 @@
 package org.leycm.chessbot.gui;
 
 import org.leycm.chessbot.chess.ChessBoard;
-import org.leycm.chessbot.chess.Piece;
+import org.leycm.chessbot.chess.ChessPiece;
 import org.leycm.chessbot.chess.pieces.*;
 import org.leycm.chessbot.model.ChessModel;
 import org.leycm.chessbot.model.ModelLoader;
@@ -116,9 +116,9 @@ public class ChessJFrameGame {
         }).start();
     }
 
-    public static HashMap<Point, Piece> getNormalChessPieces(ChessBoard board) {
+    public static HashMap<Point, ChessPiece> getNormalChessPieces(ChessBoard board) {
 
-        HashMap<Point, Piece> pieces = new HashMap<>();
+        HashMap<Point, ChessPiece> pieces = new HashMap<>();
 
         // White
         pieces.put(new Point(0, 7), new RookChessPiece(true, board));
@@ -230,14 +230,14 @@ public class ChessJFrameGame {
                 String text = points.get(new Point(col, row));
                 if (text != null) {
                     JLabel label = new JLabel(text, SwingConstants.CENTER);
-                    Piece piece = currentBoard.getPiece(col, row);
+                    ChessPiece piece = currentBoard.getPiece(col, row);
                     label.setForeground(piece != null && piece.isWhite() ? Color.WHITE : Color.BLACK);
                     int size = jFrame.getHeight() / 8;
                     label.setFont(label.getFont().deriveFont((float) size * 0.7f));
                     square.add(label, BorderLayout.CENTER);
                 }
 
-                Piece piece = currentBoard.getPiece(fromX, fromY);
+                ChessPiece piece = currentBoard.getPiece(fromX, fromY);
                 if (piece != null) {
                     for (int[] validField : piece.getValidFields()) {
                         if (validField[0] == col && validField[1] == row) {

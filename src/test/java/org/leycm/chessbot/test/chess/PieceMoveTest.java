@@ -1,7 +1,7 @@
 package org.leycm.chessbot.test.chess;
 
 import org.leycm.chessbot.chess.ChessBoard;
-import org.leycm.chessbot.chess.Piece;
+import org.leycm.chessbot.chess.ChessPiece;
 import org.leycm.chessbot.chess.pieces.*;
 
 public class PieceMoveTest {
@@ -19,7 +19,7 @@ public class PieceMoveTest {
 
     }
 
-    public static void testChessPiece(ChessBoard chessBoard, Piece piece, int x, int y, int[][] obstacle, int[][] teammates) {
+    public static void testChessPiece(ChessBoard chessBoard, ChessPiece piece, int x, int y, int[][] obstacle, int[][] teammates) {
 
         chessBoard.placePiece(piece, x, y);
 

@@ -1,13 +1,13 @@
 package org.leycm.chessbot.chess.pieces;
 
 import org.leycm.chessbot.chess.ChessBoard;
-import org.leycm.chessbot.chess.Piece;
+import org.leycm.chessbot.chess.ChessPiece;
 import org.leycm.chessbot.util.ArrayUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class KnightChessPiece extends Piece {
+public class KnightChessPiece extends ChessPiece {
 
     public KnightChessPiece(boolean isWhite, ChessBoard board) {
         super(isWhite, board, 3, "knight_chess_piece", "Knight", '♞');

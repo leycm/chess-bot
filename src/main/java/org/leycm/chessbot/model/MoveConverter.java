@@ -3,7 +3,7 @@ package org.leycm.chessbot.model;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.leycm.chessbot.chess.ChessBoard;
-import org.leycm.chessbot.chess.Piece;
+import org.leycm.chessbot.chess.ChessPiece;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,7 +68,7 @@ public class MoveConverter {
         int fromX = 4; // e
         int toX = kingSide ? 6 : 2; // g oder c
 
-        Piece k = board.getPiece(fromX, y);
+        ChessPiece k = board.getPiece(fromX, y);
         if (k == null || !k.getId().toLowerCase(Locale.ROOT).contains("king") || k.isWhite() != white) {
             return invalid();
         }
@@ -116,7 +116,7 @@ public class MoveConverter {
         List<int[]> candidates = new ArrayList<>();
         for (int fromY = 0; fromY < 8; fromY++) {
             for (int fromX = 0; fromX < 8; fromX++) {
-                Piece p = board.getPiece(fromX, fromY);
+                ChessPiece p = board.getPiece(fromX, fromY);
                 if (p == null) continue;
                 if (p.isWhite() != white) continue;
                 if (!matchesPieceType(p, pieceType)) continue;
@@ -144,7 +144,7 @@ public class MoveConverter {
 
     /* ===================== Helpers ===================== */
 
-    private static boolean matchesPieceType(@NotNull Piece piece, char pieceType) {
+    private static boolean matchesPieceType(@NotNull ChessPiece piece, char pieceType) {
         String id = piece.getId().toLowerCase(Locale.ROOT);
         return switch (pieceType) {
             case 'P' -> id.contains("pawn");
@@ -190,7 +190,7 @@ public class MoveConverter {
 
     /** Pawn-diagonal auf leeres Zielfeld → potentiell en-passant. */
     private static boolean isPawnDiagonalToEmptyCapture(@NotNull ChessBoard board, int fromX, int fromY, int toX, int toY) {
-        Piece p = board.getPiece(fromX, fromY);
+        ChessPiece p = board.getPiece(fromX, fromY);
         if (p == null) return false;
         if (!p.getId().toLowerCase(Locale.ROOT).contains("pawn")) return false;
 
@@ -216,7 +216,7 @@ public class MoveConverter {
         if (hist.isEmpty()) return false;
 
         ChessBoard.Move last = hist.get(hist.size() - 1);
-        Piece moved = last.movedPiece();
+        ChessPiece moved = last.movedPiece();
         if (moved == null) return false;
         if (!moved.getId().toLowerCase(Locale.ROOT).contains("pawn")) return false;
 

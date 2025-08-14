@@ -2,13 +2,13 @@ package org.leycm.chessbot.chess.pieces;
 
 import org.jetbrains.annotations.NotNull;
 import org.leycm.chessbot.chess.ChessBoard;
-import org.leycm.chessbot.chess.Piece;
+import org.leycm.chessbot.chess.ChessPiece;
 import org.leycm.chessbot.util.ArrayUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BishopChessPiece extends Piece {
+public class BishopChessPiece extends ChessPiece {
 
     public BishopChessPiece(boolean isWhite, ChessBoard board) {
         super(isWhite, board, 3, "bishop_chess_piece", "Bishop", '♝');

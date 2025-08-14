@@ -4,18 +4,13 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.leycm.chessbot.chess.ChessBoard;
 import org.leycm.chessbot.chess.ChessBoard.Move;
-import org.leycm.chessbot.chess.Piece;
-import org.leycm.chessbot.chess.pieces.PawnChessPiece;
+import org.leycm.chessbot.chess.ChessPiece;
 
 import javax.swing.*;
-import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ChessJFrameBrowser extends JFrame {
     private static ChessJFrameBrowser instance;
@@ -230,7 +225,7 @@ public class ChessJFrameBrowser extends JFrame {
                         square.add(colLabel, BorderLayout.SOUTH);
                     }
 
-                    Piece piece = currentDisplayBoard.getPiece(col, row);
+                    ChessPiece piece = currentDisplayBoard.getPiece(col, row);
                     if (piece != null) {
                         JLabel pieceLabel = new JLabel(String.valueOf(piece.getIco()), SwingConstants.CENTER);
                         pieceLabel.setFont(new Font("SansSerif", Font.PLAIN, 28));
@@ -307,7 +302,7 @@ public class ChessJFrameBrowser extends JFrame {
 
             for (int x = 0; x < 8; x++) {
                 for (int y = 0; y < 8; y++) {
-                    Piece piece = board.getPiece(x, y);
+                    ChessPiece piece = board.getPiece(x, y);
                     if (piece != null && !hasMoved(piece, moves)) {
                         currentDisplayBoard.placePiece(piece, x, y);
                     }
@@ -323,7 +318,7 @@ public class ChessJFrameBrowser extends JFrame {
         }
 
         @Contract(pure = true)
-        private boolean hasMoved(Piece piece, @NotNull List<Move> moves) {
+        private boolean hasMoved(ChessPiece piece, @NotNull List<Move> moves) {
             for (Move move : moves) {
                 if (move.movedPiece() == piece) {
                     return true;
@@ -337,7 +332,7 @@ public class ChessJFrameBrowser extends JFrame {
 
             for (int x = 0; x < 8; x++) {
                 for (int y = 0; y < 8; y++) {
-                    Piece piece = original.getPiece(x, y);
+                    ChessPiece piece = original.getPiece(x, y);
                     if (piece != null) {
                         copy.placePiece(piece, x, y);
                     }
