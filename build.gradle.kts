@@ -16,7 +16,7 @@ dependencies {
     compileOnly("org.jetbrains:annotations:26.0.2")
 
     implementation("com.google.guava:guava:31.1-jre")
-
+    implementation("org.apache.commons:commons-lang3:3.12.0")
 
     compileOnly("org.projectlombok:lombok:1.18.38")
     annotationProcessor("org.projectlombok:lombok:1.18.38")

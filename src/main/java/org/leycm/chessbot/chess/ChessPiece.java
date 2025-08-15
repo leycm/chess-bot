@@ -2,12 +2,13 @@ package org.leycm.chessbot.chess;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Data
-public abstract class ChessPiece {
+public abstract class ChessPiece implements Serializable {
 
     protected final boolean isWhite;
     public boolean hasMovedYet = false;

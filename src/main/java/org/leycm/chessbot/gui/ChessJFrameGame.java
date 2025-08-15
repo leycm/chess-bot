@@ -46,7 +46,6 @@ public class ChessJFrameGame {
 
         setupGlobalMouseTracker(jFrame);
 
-        // Ai Move
         new Timer(501, actionEvent -> {
 
             boolean team = true;

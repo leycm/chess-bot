@@ -106,7 +106,7 @@ public class ChessTrainer {
         for (String moveStr : gameData.moves()) {
 
             int[] boardState = board.getGameStateArray();
-            ChessMove move = ChessMove.algebraic(moveStr, board);
+            ChessMove move = new ChessMove(-1, -1, -1, -1, board);
 
             if (move.getFromX() == -1) {
                 board.setWhiteTurn(!board.isWhiteTurn());

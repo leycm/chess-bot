@@ -3,8 +3,10 @@ package org.leycm.chessbot.chess;
 import lombok.Data;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 @Data
-public abstract class ChessController {
+public abstract class ChessController implements Serializable {
     private final String name;
     private final String type;
 
