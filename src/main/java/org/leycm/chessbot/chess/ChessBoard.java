@@ -287,6 +287,19 @@ public class ChessBoard {
                 .toArray();
     }
 
+    @Deprecated
+    public int[] getNotNullArray() {
+//        int[][] result = new int[8][8];
+//        for (int y = 0; y < 8; y++) {
+//            for (int x = 0; x < 8; x++) {
+//                ChessPiece piece = board[y][x];
+//                result[y][x] = piece == null ? 0 : piece.getLevel() * (piece.isWhite() ? 1 : -1);
+//            }
+//        }
+//        return result;
+        return null;
+    }
+
     public int[] getGameStateArray() {
             int[] result = new int[65];
             int[] boardValues = Arrays.stream(board)
