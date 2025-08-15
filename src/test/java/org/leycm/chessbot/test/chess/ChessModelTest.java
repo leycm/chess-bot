@@ -6,7 +6,7 @@ import org.leycm.chessbot.model.ModelLoader;
 public class ChessModelTest {
     public static void main(String[] args) throws InterruptedException {
 
-        ChessBoard board = new ChessBoard(true);
+        ChessBoard board = new ChessBoard();
         System.out.println(board.toVisualString());
         while (true) {
             System.out.println("[INFO]: Start New move for " + (board.isWhiteTurn() ? "WHITE" : "BLACK"));

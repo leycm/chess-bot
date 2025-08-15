@@ -36,7 +36,9 @@ public class ReadOnlyChessModel {
             writer = new BufferedWriter(new OutputStreamWriter(engineProcess.getOutputStream()));
             sendCommand("uci");
             waitForReady();
-        } catch (IOException _) {}
+        } catch (IOException _) {
+            closed = true;
+        }
 
     }
 
@@ -99,7 +101,8 @@ public class ReadOnlyChessModel {
             board.movePiece(fromX, fromY, toX, toY);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("An IO error have fun to debug Model closed");
+            closed = true;
         }
     }
 

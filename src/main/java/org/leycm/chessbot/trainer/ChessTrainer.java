@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.leycm.chessbot.chess.*;
+import org.leycm.chessbot.chess.controller.VirtualUiController;
 import org.leycm.chessbot.chess.pieces.*;
 import org.leycm.chessbot.model.ChessModel;
 import org.leycm.chessbot.model.ModelLoader;
@@ -96,11 +97,10 @@ public class ChessTrainer {
         }
     }
 
-    private void trainOnGame(@NotNull SingleThreadPgnParser.GameData gameData) {
-        ChessBoard board = new ChessBoard(true);
+    private void trainOnGame(@NotNull ChessPgnParser.GameData gameData) {
+        ChessBoard board = new ChessBoard();
 
         board.setWhiteTurn(true);
-
 
 
         for (String moveStr : gameData.moves()) {

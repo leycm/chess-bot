@@ -2,6 +2,8 @@ package org.leycm.chessbot.gui;
 
 import org.leycm.chessbot.chess.ChessBoard;
 import org.leycm.chessbot.chess.ChessPiece;
+import org.leycm.chessbot.chess.controller.VirtualAiController;
+import org.leycm.chessbot.chess.controller.VirtualUiController;
 import org.leycm.chessbot.chess.pieces.*;
 import org.leycm.chessbot.model.ChessModel;
 import org.leycm.chessbot.model.ModelLoader;
@@ -17,7 +19,7 @@ public class ChessJFrameGame {
     private static DefaultListModel<String> listModel = new DefaultListModel<>();
     private static JFrame jFrame = new JFrame("Chess Board [UI]");
     private static JPanel jSidePanel = new JPanel(new BorderLayout());
-    private static ChessBoard currentBoard = new ChessBoard(true);
+    private static ChessBoard currentBoard;
     private static HashMap<String, Color> theme = new HashMap<>();
     private static ChessModel model = new ChessModel();
     private static volatile boolean leftMousePressed = false;
@@ -31,7 +33,7 @@ public class ChessJFrameGame {
 
     public static void main(String[] args) throws IOException {
 
-        currentBoard = new ChessBoard(true);
+        currentBoard = new ChessBoard(new VirtualUiController("User"), new VirtualAiController("Hans"));
 
         theme.put("board.w", new Color(0xFFCE9E));
         theme.put("board.b", new Color(0xD18B47));

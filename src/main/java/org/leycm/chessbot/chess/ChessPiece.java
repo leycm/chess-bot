@@ -2,6 +2,8 @@ package org.leycm.chessbot.chess;
 
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -28,7 +30,22 @@ public abstract class ChessPiece {
 
     public abstract boolean isValidMove(int targetX, int targetY);
 
+
     public abstract int[][] getValidFields();
+
+    public ChessMove[] getValidMoves() {
+        List<ChessMove> moves = new ArrayList<>();
+
+        int[][] fields = getValidFields();
+
+        for (int[] field : fields) {
+            ChessMove move = new ChessMove(getX(), getY(), field[0], field[1], board);
+            if (board.isMoveLegalRegardingCheck(move))
+                moves.add(move);
+        }
+
+        return moves.toArray(new ChessMove[]{});
+    }
 
     public int getX() {
         return board.getXForPiece(uuid);

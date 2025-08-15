@@ -8,7 +8,7 @@ public class PieceMoveTest {
 
     public static void main(String[] args) {
 
-        ChessBoard chessBoard = new ChessBoard(false);
+        ChessBoard chessBoard = new ChessBoard();
 
         testChessPiece(chessBoard, new PawnChessPiece(true, chessBoard), 3, 3, new int[][]{{1, 1}, {0, 3}, {6, 6}, {0, 5}, {2, 2}}, new int[][]{{3, 5}});
         testChessPiece(chessBoard, new KnightChessPiece(true, chessBoard), 3, 3, new int[][]{{1, 1}, {0, 3}, {6, 6}, {0, 5}, {2, 2}}, new int[][]{{3, 5}});
