@@ -49,7 +49,7 @@ public class LedControl {
         });
     }
 
-    public static void promptMove(int[] from, int[] to) {
+    public static void promptMove(int[] from, int[] to) throws InterruptedException {
 
         forceStop();
 
@@ -71,7 +71,7 @@ public class LedControl {
 
             while (currentX != startX + relativeX) {
 
-                // toDo: add a delay so it is not to fast (use the delay var)
+                Thread.sleep(delay);
 
                 forceStop();
                 currentX = currentX + directionX;
@@ -82,7 +82,8 @@ public class LedControl {
 
             while (currentY != startY + relativeY) {
 
-                // toDo: add a delay so it is not to fast (use the delay int)
+                Thread.sleep(delay);
+
 
                 forceStop();
                 currentY = currentY + directionY;
