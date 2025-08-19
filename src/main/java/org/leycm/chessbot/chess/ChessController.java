@@ -19,9 +19,13 @@ public abstract class ChessController implements Serializable {
     }
 
     public abstract void onTick(ChessBoard board);
+    protected abstract ChessController onClone();
 
     public void tick(ChessBoard board) {
         onTick(board);
+    }
+    public ChessController clone() {
+        return onClone();
     }
 
 

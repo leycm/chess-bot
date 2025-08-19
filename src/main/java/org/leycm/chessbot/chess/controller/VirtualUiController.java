@@ -14,4 +14,9 @@ public class VirtualUiController extends ChessController {
 
     }
 
+    @Override
+    protected ChessController onClone() {
+        return new VirtualUiController(getName());
+    }
+
 }
