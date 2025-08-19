@@ -1,6 +1,7 @@
 package org.leycm.chessbot.board;
 
 import org.leycm.chessbot.chess.ChessBoard;
+import org.leycm.chessbot.chess.ChessMove;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,15 +50,15 @@ public class LedControl {
         });
     }
 
-    public static void promptMove(int[] from, int[] to) throws InterruptedException {
+    public static void showMove(ChessMove move) throws InterruptedException {
 
         forceStop();
 
-        int startY = from[0];
-        int startX = from[1];
+        int startY = move.getFromX();
+        int startX = move.getFromY();
 
-        int relativeX = from[0] - to[0];
-        int relativeY = from[1] - to[1];
+        int relativeX = move.getFromX() - move.getToX();
+        int relativeY = move.getFromY() - move.getToY();
 
         int directionX = relativeX / relativeX;
         int directionY = relativeY / relativeY;
@@ -92,8 +93,44 @@ public class LedControl {
 
             }
 
+            Thread.sleep(delay * 5L);
+
         }
 
+    }
+
+    public static void showMate(int[] pos) throws InterruptedException {
+
+        forceStop();
+
+        while (isActive) {
+
+            turnOn(pos);
+
+            Thread.sleep(delay * 4L);
+
+            turnOff(pos);
+
+            Thread.sleep(delay * 4L);
+
+        }
+    }
+
+    public static void showCheckmate(int[] pos) throws InterruptedException {
+
+        forceStop();
+
+        while (isActive) {
+
+            turnOn(pos);
+
+            Thread.sleep(delay * 2L);
+
+            turnOff(pos);
+
+            Thread.sleep(delay * 2L);
+
+        }
     }
 
 }
