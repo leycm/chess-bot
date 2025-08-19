@@ -103,13 +103,13 @@ public class ChessBoardPanel extends JPanel {
             drawSquareHighlight(g2d, kingInCheck.x, kingInCheck.y);
         }
 
-        if (true) { // try 0  navigationController.isAtLatestPosition()
-            g2d.setColor(ChessConstants.VALID_MOVE_COLOR);
-            drawValidMoves(g2d);
-        }
+        // try 0  navigationController.isAtLatestPosition()
+        g2d.setColor(ChessConstants.VALID_MOVE_COLOR);
+        drawValidMoves(g2d);
+
     }
 
-    private void drawSquareHighlight(Graphics2D g2d, int x, int y) {
+    private void drawSquareHighlight(@NotNull Graphics2D g2d, int x, int y) {
         g2d.fillRect(x * ChessConstants.SQUARE_SIZE, y * ChessConstants.SQUARE_SIZE,
                 ChessConstants.SQUARE_SIZE, ChessConstants.SQUARE_SIZE);
     }
@@ -145,7 +145,6 @@ public class ChessBoardPanel extends JPanel {
         navigationController.navigateToMove(navigationController.getCurrentMoveIndex());
         ChessBoard displayBoard = navigationController.getDisplayBoard();
         if (displayBoard == null) return;
-        displayBoard.start();
 
         g2d.setFont(ChessConstants.PIECE_FONT);
 
@@ -199,7 +198,7 @@ public class ChessBoardPanel extends JPanel {
     }
 
     public void handlePieceSelection(int col, int row) {
-        ChessPiece piece = chessBoard.getPiece(col, row);
+        ChessPiece piece = navigationController.getDisplayBoard().getPiece(col, row);
         if (piece != null && piece.isWhite() == chessBoard.isWhiteTurn()) {
             draggedPiece = piece;
             draggedFromX = col;
@@ -223,16 +222,28 @@ public class ChessBoardPanel extends JPanel {
     }
 
     public void handlePieceMove(int toCol, int toRow) {
-        if (!navigationController.isAtLatestPosition()) {
-            ChessBoardUi.streamBoard(navigationController.getId() + "->" +
-                    navigationController.getCurrentMoveIndex() + "clone", navigationController.getDisplayBoard());
-            navigationController.navigateToLast();
-            navigationController.navigateToNext();
-        }
+
 
         if (toCol != draggedFromX || toRow != draggedFromY) {
+            if (!navigationController.isAtLatestPosition()) {
+
+                ChessBoard forkBoard = navigationController.getDisplayBoard();
+                ChessBoardUi.streamBoard(navigationController.getId() + "/alt-" +
+                        navigationController.getCurrentMoveIndex(), forkBoard);
+
+                forkBoard.movePiece(draggedFromX, draggedFromY, toCol, toRow);
+                forkBoard.setWhiteController(chessBoard.getWhiteController().clone());
+                forkBoard.setBlackController(chessBoard.getBlackController().clone());
+
+                //noinspection deprecation
+                forkBoard.autoTick();
+
+                navigationController.navigateToFirst();
+                navigationController.navigateToLast();
+            }
             chessBoard.movePiece(draggedFromX, draggedFromY, toCol, toRow);
         }
+
         clearDragState();
     }
 

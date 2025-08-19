@@ -2,11 +2,14 @@ package org.leycm.chessbot.chess;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.leycm.chessbot.chess.controller.SensorController;
 import org.leycm.chessbot.chess.controller.VirtualAiController;
+import org.leycm.chessbot.chess.controller.VirtualUiController;
 import org.leycm.chessbot.chess.pieces.*;
 
+import javax.swing.Timer;
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.Consumer;
@@ -18,13 +21,12 @@ public class ChessBoard implements Serializable {
     private final List<ChessMove> moveHistory = new ArrayList<>();
     @Getter private final Consumer<ChessBoard> startingOder;
 
-    @Setter @Getter
-    private boolean whiteTurn;
+    @Getter @Setter private boolean whiteTurn;
     @Getter private ChessBoard.State state = State.START;
 
 
-    @Getter private final ChessController whiteController;
-    @Getter private final ChessController blackController;
+    @Getter @Setter private ChessController whiteController;
+    @Getter @Setter private ChessController blackController;
 
     @Getter private ChessController lastGameWinner = null;
 
@@ -37,7 +39,7 @@ public class ChessBoard implements Serializable {
         IDLE
     }
     public ChessBoard() {
-        this(new VirtualAiController("Example"), new VirtualAiController("Example"));
+        this(new VirtualUiController("WhiteController"), new VirtualAiController("BlackController"));
     }
 
     public ChessBoard(ChessController whiteController, ChessController blackController) {
@@ -74,6 +76,11 @@ public class ChessBoard implements Serializable {
         this.whiteController = whiteController;
         this.blackController = blackController;
         start();
+    }
+
+    @Deprecated @ApiStatus.Internal
+    public void autoTick() {
+        new Timer(20, _ -> tick()).start();
     }
 
     public void tick() {

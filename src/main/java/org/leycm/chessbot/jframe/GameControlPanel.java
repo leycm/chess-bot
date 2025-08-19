@@ -1,5 +1,6 @@
 package org.leycm.chessbot.jframe;
 
+import org.jetbrains.annotations.NotNull;
 import org.leycm.chessbot.chess.ChessBoard;
 
 import javax.swing.*;
@@ -23,7 +24,7 @@ public class GameControlPanel extends JPanel {
         add(createGameControlPanel(), BorderLayout.SOUTH);
     }
 
-    private JPanel createNavigationPanel() {
+    private @NotNull JPanel createNavigationPanel() {
         JPanel navPanel = new JPanel(new FlowLayout());
         navPanel.setBackground(ChessConstants.PANEL_BACKGROUND);
 
@@ -44,15 +45,15 @@ public class GameControlPanel extends JPanel {
         return navPanel;
     }
 
-    private JButton createNavigationButton(String text, String tooltip,
-                                           java.awt.event.ActionListener action) {
+    private @NotNull JButton createNavigationButton(String text, String tooltip,
+                                                    java.awt.event.ActionListener action) {
         JButton button = new JButton(text);
         button.setToolTipText(tooltip);
         button.addActionListener(action);
         return button;
     }
 
-    private JPanel createGameControlPanel() {
+    private @NotNull JPanel createGameControlPanel() {
         JPanel gamePanel = new JPanel(new FlowLayout());
         gamePanel.setBackground(ChessConstants.PANEL_BACKGROUND);
 

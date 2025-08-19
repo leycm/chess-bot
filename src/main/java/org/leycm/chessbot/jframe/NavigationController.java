@@ -40,7 +40,7 @@ public class NavigationController {
     public void navigateToMove(int moveIndex) {
         List<ChessMove> history = chessBoard.getMoveHistory();
 
-        if (moveIndex == -1) {
+        if (moveIndex == -1 || moveIndex == history.size() - 1) {
             currentMoveIndex = -1;
             displayBoard = chessBoard;
         } else if (moveIndex == -2) {

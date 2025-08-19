@@ -3,7 +3,6 @@ package org.leycm.chessbot.jframe;
 import org.jetbrains.annotations.NotNull;
 import org.leycm.chessbot.chess.*;
 import org.leycm.chessbot.chess.controller.VirtualAiController;
-import org.leycm.chessbot.chess.controller.VirtualUiController;
 import org.leycm.chessbot.chess.pieces.*;
 
 import javax.swing.*;
@@ -17,7 +16,8 @@ import java.util.Map;
  * Main Chess Board UI class that manages the chess game display and user interactions.
  */
 public class ChessBoardUi extends JFrame {
-    private static final Map<String, ChessBoardUi> ACTIVE_BOARDS = new ConcurrentHashMap<>();
+    private static final Map<String, ChessBoardUi> activeBoards = new ConcurrentHashMap<>();
+    private static final Map<String, ChessBoard> tickedBoards = new ConcurrentHashMap<>();
 
     private final String boardId;
     private ChessBoard chessBoard;
@@ -40,14 +40,14 @@ public class ChessBoardUi extends JFrame {
      */
     public static void streamBoard(String id, ChessBoard board) {
         SwingUtilities.invokeLater(() -> {
-            ChessBoardUi existingUI = ACTIVE_BOARDS.get(id);
+            ChessBoardUi existingUI = activeBoards.get(id);
             if (existingUI != null) {
                 existingUI.updateChessBoard(board);
                 existingUI.toFront();
                 existingUI.requestFocus();
             } else {
                 ChessBoardUi newUI = new ChessBoardUi(id, board);
-                ACTIVE_BOARDS.put(id, newUI);
+                activeBoards.put(id, newUI);
                 newUI.setVisible(true);
             }
         });
@@ -82,7 +82,7 @@ public class ChessBoardUi extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                ACTIVE_BOARDS.remove(boardId);
+                activeBoards.remove(boardId);
             }
         });
     }
@@ -121,10 +121,10 @@ public class ChessBoardUi extends JFrame {
      * Main method for testing the chess UI.
      */
     public static void main(String[] args) {
-        ChessController whiteController = new VirtualUiController("Human Player");
-        //ChessController whiteController = new VirtualAiController("AI");
-        ChessController blackController = new VirtualUiController("Human Player");
-        //ChessController blackController = new VirtualAiController("AI");
+        //ChessController whiteController = new VirtualUiController("Human Player");
+        ChessController whiteController = new VirtualAiController("AI");
+        //ChessController blackController = new VirtualUiController("Human Player");
+        ChessController blackController = new VirtualAiController("AI");
 
         ChessBoard board = new ChessBoard(ChessBoardUi::setupStandardChessBoard, whiteController, blackController);
 

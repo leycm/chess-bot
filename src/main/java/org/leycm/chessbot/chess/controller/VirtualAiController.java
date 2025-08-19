@@ -25,4 +25,9 @@ public class VirtualAiController extends ChessController {
         });
     }
 
+    @Override
+    protected ChessController onClone() {
+        return new VirtualAiController(getName());
+    }
+
 }
